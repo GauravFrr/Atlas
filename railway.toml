@@ -1,11 +1,15 @@
-# Railway deploy — webhooks + health (Razorpay + Instantly)
-# https://docs.railway.app/reference/config-as-code
+# Railway — shared repo, multiple services (see docs/RAILWAY.md)
+# Start command is the same for every service; pick role with RAILWAY_SERVICE_ROLE:
+#   webhook  → Service 1 (default) — Instantly + Razorpay webhooks
+#   telegram → Service 2 — Telegram approve bot
+#
+# Service 1: leave unset or RAILWAY_SERVICE_ROLE=webhook
+# Service 2: Variables → RAILWAY_SERVICE_ROLE=telegram
+# Healthcheck /health only on Service 1 (set in Railway UI for that service).
 
 [build]
 builder = "nixpacks"
 
 [deploy]
-startCommand = "python scripts/run_instantly_webhook.py --host 0.0.0.0"
-healthcheckPath = "/health"
-healthcheckTimeout = 120
+startCommand = "python scripts/railway_start.py"
 restartPolicyType = "on_failure"

@@ -6,11 +6,20 @@ Use Railway so Razorpay and Instantly always reach your app — no Cloudflare tu
 
 1. [railway.app](https://railway.app) → New Project → Deploy from GitHub (or CLI).
 2. Root directory: repo root (`Agent-Earns`).
-3. Railway reads `railway.toml` and starts:
-   ```bash
-   python scripts/run_instantly_webhook.py --host 0.0.0.0
-   ```
-4. Port: Railway sets `PORT` automatically (script uses it).
+3. Railway reads `railway.toml` → `python scripts/railway_start.py` (role from env).
+4. Port: Railway sets `PORT` automatically on the webhook service.
+
+### Two services, same repo (`railway.toml` locks the start command)
+
+| Service | Variable | What runs |
+|---------|----------|-----------|
+| **Service 1 (webhooks)** | *(none)* or `RAILWAY_SERVICE_ROLE=webhook` | Webhooks + `/health` |
+| **Service 2 (Telegram)** | `RAILWAY_SERVICE_ROLE=telegram` | `run_telegram_approvals.py` |
+
+You **cannot** edit the start command in the Railway UI while `railway.toml` sets it — use the variable above on Service 2 instead.
+
+**Service 1 only:** Settings → Deploy → Healthcheck Path = `/health`
+**Service 2:** leave healthcheck **off** (no HTTP server).
 
 ## 2. Environment variables
 
@@ -74,9 +83,9 @@ Inline buttons need long polling. Options:
 | Option | How |
 |--------|-----|
 | **A (simple)** | Keep on your PC: `python scripts/run_telegram_approvals.py` |
-| **B** | Second Railway service with start command: `python scripts/run_telegram_approvals.py` |
+| **B** | Second Railway service: set variable `RAILWAY_SERVICE_ROLE=telegram` |
 
-Webhook server and Telegram bot can be separate services.
+Webhook server and Telegram bot can be separate services (same `railway.toml` start command).
 
 ## 7. Verify
 
