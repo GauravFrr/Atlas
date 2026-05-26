@@ -1,0 +1,10 @@
+[
+  "gmail.com", "yahoo.com", "hotmail.com", "outlook.com",
+  "example.com", "test.com", "noreply.com", "no-reply.com",
+  "donotreply.com", "spam.com", "temp.com", "mailinator.com",
+  "guerrillamail.com", "throwaway.com", "10minutemail.com",
+  "yopmail.com", "maildrop.cc", "trashmail.com", "getairmail.com",
+  "gov.in", "gov.uk", "gov.us", "mil.us",
+  "google.com", "facebook.com", "amazon.com", "microsoft.com",
+  "apple.com", "netflix.com", "twitter.com", "instagram.com"
+]

@@ -1,0 +1,5 @@
+{
+  "description": "Autopilot rotates all 17 Category A methods (M01–M17) from AGENT_EARNING_METHODS.md",
+  "leads_per_run": 10,
+  "lead_scan_source": "auto"
+}

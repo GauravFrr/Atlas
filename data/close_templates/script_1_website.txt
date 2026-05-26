@@ -1,0 +1,11 @@
+Hey {{firstName}},
+
+Really glad this landed at a good time.
+
+So the way I'd help {{companyName}} is straightforward — a clean, mobile-friendly site with lead capture built in, so enquiries don't only hit the phone when you're busy or after hours.
+
+Most {{niche}} businesses I talk to aren't doing anything wrong — there's just no simple place online for people to find you and leave their details.
+
+Quick question so I can point you in the right direction — where do most enquiries come in today? Google, phone, WhatsApp, or somewhere else?
+
+— {{sender_name}}

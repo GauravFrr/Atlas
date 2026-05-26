@@ -1,0 +1,11 @@
+Hi {{first_name}},
+
+As discussed — here's the secure payment link for the package (INR {{amount_inr}}):
+
+{{payment_url}}
+
+UPI, card, or netbanking. Link is valid 7 days.
+
+Once payment comes through, I'll confirm and we'll lock your kickoff date.
+
+— {{sender_name}}

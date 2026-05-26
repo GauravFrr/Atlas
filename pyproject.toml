@@ -1,0 +1,33 @@
+[project]
+name = "agent-earns"
+version = "1.0.0"
+description = "Autonomous AI Earning Agent - Production Grade"
+authors = [{ name = "Mikey", email = "itzmi3xel@email.com" }]
+requires-python = ">=3.11"
+readme = "README.md"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "RET", "SIM"]
+ignore = ["E501", "B008", "N805"]
+
+[tool.ruff.isort]
+known-first-party = ["core", "llm", "modules", "integrations", "database", "utils", "scheduler", "security", "dashboard"]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+strict = false
+warn_return_any = true
+warn_unused_configs = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.backends.legacy:build"

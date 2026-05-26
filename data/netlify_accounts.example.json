@@ -1,0 +1,19 @@
+[
+  {
+    "name": "account-5",
+    "auth_token": "nfp_xxx",
+    "site_id": "your-site-uuid",
+    "demo_base_url": "https://sitesforclients.netlify.app"
+  },
+  {
+    "name": "account-6",
+    "auth_token": "nfp_xxx",
+    "site_id": "your-site-uuid",
+    "demo_base_url": "https://gauravdemosites.netlify.app"
+  },
+  {
+    "name": "env-primary",
+    "disabled": true,
+    "skip_reason": "credits exhausted — use Hostinger until renewal"
+  }
+]

@@ -1,0 +1,121 @@
+"""
+Autonomous lead hunting — agent finds prospects itself (no CSV required).
+
+Rotates hunt modes each run:
+  - no_website: Google Maps / OSM (free)
+  - outdated: businesses with old websites (SSL/mobile checks)
+  - low_reviews: ≤3.5 stars (Google Places API)
+  - apollo: B2B emails (APOLLO_API_KEY)
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+from loguru import logger
+
+from config import Settings
+from core.campaign_orchestrator import CampaignResult, run_campaign
+from core.lead_sources import (
+    available_hunt_modes,
+    hunt_mode_label,
+    normalize_mode,
+    pick_hunt_mode,
+)
+
+
+def all_hunt_targets() -> list[dict[str, str]]:
+    from modules.lead_finder.scanners.google_maps import PRIORITY_NICHES, TARGET_CITIES
+
+    pairs: list[dict[str, str]] = []
+    for city in TARGET_CITIES:
+        for niche in PRIORITY_NICHES:
+            pairs.append({"niche": niche, "city": city})
+    return pairs
+
+
+def pick_next_target(rotation_index: int) -> tuple[dict[str, str], int]:
+    targets = all_hunt_targets()
+    if not targets:
+        return {"niche": "plumber", "city": "Austin TX"}, 0
+    idx = rotation_index % len(targets)
+    return targets[idx], idx
+
+
+async def hunt_and_outreach(
+    settings: Settings,
+    *,
+    leads: int,
+    send_mode: str,
+    rotation_index: int,
+    source_index: int = 0,
+    max_attempts: int = 3,
+) -> tuple[CampaignResult | None, dict[str, Any]]:
+    meta: dict[str, Any] = {"attempts": []}
+    targets = all_hunt_targets()
+    idx = rotation_index
+
+    modes = available_hunt_modes(settings)
+    meta["available_modes"] = modes
+
+    scan = (settings.lead_scan_source or "auto").lower()
+    if scan == "google" and not settings.google_places_api_key:
+        target, _ = pick_next_target(idx)
+        meta["blocked"] = "google_places_api_key"
+        meta["would_hunt"] = f"{target['niche']} @ {target['city']}"
+        return None, meta
+
+    settings.demo_generation_mode = settings.demo_generation_mode or "safe"
+
+    for attempt in range(max_attempts):
+        hunt_mode, _ = pick_hunt_mode(source_index + attempt, settings)
+        meta["hunt_mode"] = hunt_mode
+        meta["hunt_mode_label"] = hunt_mode_label(hunt_mode)
+        target, idx = pick_next_target(idx)
+        niche = target["niche"]
+        city = target["city"]
+        logger.info(
+            f"[Hunter] {hunt_mode_label(hunt_mode)} → {niche} @ {city} (up to {leads} leads)"
+        )
+
+        try:
+            result = await run_campaign(
+                niche=niche,
+                city=city,
+                leads=leads,
+                send_mode=send_mode,
+                settings=settings,
+                hunt_mode=hunt_mode,
+            )
+        except Exception as e:
+            logger.error(f"[Hunter] Campaign failed {niche}@{city}: {e}")
+            meta["attempts"].append(
+                {"niche": niche, "city": city, "hunt_mode": hunt_mode, "error": str(e)}
+            )
+            idx = (idx + 1) % len(targets)
+            continue
+
+        meta["attempts"].append(
+            {
+                "niche": niche,
+                "city": city,
+                "hunt_mode": hunt_mode,
+                "scan_source": result.scan_source,
+                "processed": result.leads_processed,
+                "sent": result.emails_sent,
+            }
+        )
+        meta["rotation_index"] = (idx + 1) % len(targets)
+        meta["source_index"] = (source_index + 1) % max(len(modes), 1)
+        meta["niche"] = niche
+        meta["city"] = city
+
+        if result.leads_processed > 0 or result.emails_sent > 0:
+            return result, meta
+
+        logger.info(f"[Hunter] No new leads — next market (mode={hunt_mode})")
+        idx = (idx + 1) % len(targets)
+
+    meta["rotation_index"] = idx % len(targets)
+    meta["source_index"] = (source_index + 1) % max(len(modes), 1)
+    return None, meta

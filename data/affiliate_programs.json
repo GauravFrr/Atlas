@@ -1,0 +1,92 @@
+{
+  "programs": [
+    {
+      "name": "Hostinger",
+      "url": "https://www.hostinger.com/affiliates",
+      "commission": "60% per sale",
+      "commission_type": "percentage",
+      "cookie_days": 30,
+      "category": "hosting",
+      "avg_payout_usd": 60,
+      "tracking_param": "?REFERRALCODE=",
+      "notes": "Huge commission, converts well for website clients"
+    },
+    {
+      "name": "Semrush",
+      "url": "https://www.semrush.com/affiliates/",
+      "commission": "$200 per trial signup",
+      "commission_type": "flat",
+      "cookie_days": 120,
+      "category": "seo_tools",
+      "avg_payout_usd": 200,
+      "tracking_param": "?ref=",
+      "notes": "Best paying affiliate in the SEO space"
+    },
+    {
+      "name": "Fiverr",
+      "url": "https://affiliates.fiverr.com",
+      "commission": "$15-150 per referral",
+      "commission_type": "flat",
+      "cookie_days": 30,
+      "category": "freelance",
+      "avg_payout_usd": 30,
+      "tracking_param": "?from=",
+      "notes": "Refer people to Fiverr gigs, earn per first order"
+    },
+    {
+      "name": "AppSumo",
+      "url": "https://affiliate.appsumo.com",
+      "commission": "5% of cart value",
+      "commission_type": "percentage",
+      "cookie_days": 30,
+      "category": "software_deals",
+      "avg_payout_usd": 15,
+      "tracking_param": "?ref=",
+      "notes": "Good for tech/startup audience articles"
+    },
+    {
+      "name": "Amazon Associates",
+      "url": "https://affiliate-program.amazon.in",
+      "commission": "1-10% per category",
+      "commission_type": "percentage",
+      "cookie_days": 24,
+      "category": "general",
+      "avg_payout_usd": 5,
+      "tracking_param": "?tag=",
+      "notes": "Low commission but extremely high conversion"
+    },
+    {
+      "name": "ConvertKit",
+      "url": "https://convertkit.com/affiliates",
+      "commission": "30% recurring",
+      "commission_type": "recurring",
+      "cookie_days": 60,
+      "category": "email_marketing",
+      "avg_payout_usd": 30,
+      "tracking_param": "?lmref=",
+      "notes": "Recurring commission — grows over time"
+    },
+    {
+      "name": "Canva",
+      "url": "https://www.canva.com/affiliates/",
+      "commission": "$36 per Pro signup",
+      "commission_type": "flat",
+      "cookie_days": 30,
+      "category": "design",
+      "avg_payout_usd": 36,
+      "tracking_param": "?via=",
+      "notes": "Great for design/content articles"
+    },
+    {
+      "name": "Notion",
+      "url": "https://www.notion.so/affiliates",
+      "commission": "$50 per Plus referral",
+      "commission_type": "flat",
+      "cookie_days": 90,
+      "category": "productivity",
+      "avg_payout_usd": 50,
+      "tracking_param": "?r=",
+      "notes": "Highly popular in startup/entrepreneur content"
+    }
+  ]
+}

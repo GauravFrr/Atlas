@@ -1,0 +1,38 @@
+---
+description: MANDATORY — read blueprint docs as the FIRST step on EVERY user message before any action
+alwaysApply: true
+---
+
+# Blueprint-first (source of truth) — MANDATORY
+
+## First action on EVERY user message (no exceptions)
+
+Before answering, coding, running commands, or suggesting how to start the agent:
+
+1. **Read** (or re-read the relevant sections of):
+   - `docs/ULTIMATE_AGENT_BLUEPRINT_V3.md` — startup, 30-min loop, decision priorities, architecture
+   - `docs/AGENT_EARNING_METHODS.md` — methods, pitches, decision matrix
+
+2. **How to start the agent (from blueprint):**
+   - `python start_agent.py` or `python main.py` → startup → health check → **Atlas loop every 30 min** → decision engine → execute task
+   - Do **not** invent a separate startup path unless the user explicitly asks to change the blueprint.
+
+3. **Do not invent** parallel logic if the docs already define it. Implement what the docs say.
+
+3. Cross-check supporting docs when touching that area:
+   - Outreach / email → `docs/MIKEY_EMAIL_STRATEGY.md`, `modules/outreach/website_pitch.py`
+   - Demos / hosting → `docs/DEMO_HOSTING.md`, `docs/HOSTINGER_DEMO_SETUP.md`
+   - Instantly → `docs/INSTANTLY_SETUP.md`, `docs/INSTANTLY_CAMPAIGN_SETUP.md`
+
+## Core outreach split (from blueprint)
+
+| Lead | Pitch |
+|------|--------|
+| No website (M10) | Website + lead capture |
+| Outdated site (M02, score &lt; 5 / no mobile / no SSL) | Site rebuild |
+| Professional modern site | Automation only (chatbot, booking, follow-up) — **not** a new website |
+| Real estate niche | Automation |
+
+## When docs and code disagree
+
+Update **code to match docs**, unless the user explicitly asks to change the product decision — then update docs too.

@@ -1,0 +1,66 @@
+# Environment / secrets
+.env
+.env.staging
+.env.test
+*.env
+KEYS.txt
+$PROFILE.txt
+.claude/
+data/outreach_domains.json
+data/netlify_accounts.json
+data/hostinger_sites.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+*.egg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Database (don't commit production DB)
+*.db
+*.db-*
+*.sqlite3
+agent.db
+
+# Logs (runtime generated)
+logs/
+*.log
+
+# Outputs (generated deliverables)
+outputs/
+
+# Playwright
+.playwright/
+
+# Cache
+.cache/
+__pycache__/
+.mypy_cache/
+.ruff_cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup
+
+# Keep these empty directories tracked
+!outputs/.gitkeep
+!logs/.gitkeep

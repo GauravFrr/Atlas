@@ -1,0 +1,7 @@
+Hi {{first_name}},
+
+Great to hear — happy you're open to it.
+
+{{next_step_line}}
+
+— {{sender_name}}

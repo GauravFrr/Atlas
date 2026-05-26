@@ -1,0 +1,137 @@
+{
+  "_strategy_note": "PRIMARY FOCUS: Foreign clients (USD pricing). Ideal targets: small US/UK/AU/CA businesses with no website or outdated website. They have budget, they have pain, they respond to personalized cold outreach.",
+  "niches": [
+    {
+      "name": "restaurant",
+      "keywords": ["restaurant", "cafe", "bistro", "diner", "eatery", "steakhouse", "pizzeria", "sushi", "bar and grill", "food truck"],
+      "pain_points": ["no online menu", "no reservation system", "poor Google reviews response", "outdated website", "no mobile-friendly site"],
+      "best_service": "full_website",
+      "avg_deal_usd": 799,
+      "avg_deal_inr": 67000,
+      "conversion_rate": 0.09,
+      "target_markets": ["usa_primary", "uk_primary", "australia_primary", "canada_primary"],
+      "email_hook": "I noticed {business_name} doesn't have online ordering — you're losing customers every night to competitors who do."
+    },
+    {
+      "name": "salon_spa",
+      "keywords": ["salon", "spa", "beauty salon", "hair salon", "nail salon", "barbershop", "grooming", "aesthetics", "day spa"],
+      "pain_points": ["no online booking", "no photo gallery of work", "no reviews page", "no website at all"],
+      "best_service": "full_website",
+      "avg_deal_usd": 699,
+      "avg_deal_inr": 58000,
+      "conversion_rate": 0.11,
+      "target_markets": ["usa_primary", "uk_primary", "australia_primary"],
+      "email_hook": "I looked up {business_name} and couldn't find a way to book online — most salons that add online booking see 30%+ more appointments."
+    },
+    {
+      "name": "fitness_gym",
+      "keywords": ["gym", "fitness center", "crossfit", "yoga studio", "pilates studio", "martial arts", "personal trainer", "boxing gym"],
+      "pain_points": ["no membership info online", "no class schedule", "no trainer profiles", "no lead capture form"],
+      "best_service": "ai_chatbot",
+      "avg_deal_usd": 749,
+      "avg_deal_inr": 63000,
+      "conversion_rate": 0.09,
+      "target_markets": ["usa_primary", "uk_primary", "australia_primary", "canada_primary"],
+      "email_hook": "I built a free AI chatbot mockup for {business_name} that answers membership questions 24/7 — want me to send it over?"
+    },
+    {
+      "name": "medical_clinic",
+      "keywords": ["clinic", "medical practice", "doctor", "dentist", "dental clinic", "chiropractor", "physiotherapy", "optometrist", "dermatologist", "orthodontist"],
+      "pain_points": ["no appointment booking", "no doctor profiles", "poor online presence", "no patient portal"],
+      "best_service": "ai_chatbot",
+      "avg_deal_usd": 1299,
+      "avg_deal_inr": 108000,
+      "conversion_rate": 0.07,
+      "target_markets": ["usa_primary", "canada_primary", "australia_primary", "uk_primary"],
+      "email_hook": "I noticed {business_name}'s patients can't book appointments online — I can add an AI booking assistant to your site this week."
+    },
+    {
+      "name": "lawyer_consultant",
+      "keywords": ["law firm", "attorney", "lawyer", "legal services", "solicitor", "barrister", "consultant", "accounting firm", "CPA", "financial advisor"],
+      "pain_points": ["generic website", "no consultation booking", "no case type info", "poor local SEO"],
+      "best_service": "landing_page",
+      "avg_deal_usd": 999,
+      "avg_deal_inr": 83000,
+      "conversion_rate": 0.06,
+      "target_markets": ["usa_primary", "uk_primary", "canada_primary", "australia_primary"],
+      "email_hook": "I found {business_name} on Google but couldn't figure out what type of cases you specialize in — a simple landing page fix could double your consultation requests."
+    },
+    {
+      "name": "real_estate",
+      "keywords": ["real estate agent", "realtor", "property management", "real estate broker", "mortgage broker", "property developer"],
+      "pain_points": ["no property listings", "no lead capture", "generic agent website", "no neighborhood guides"],
+      "best_service": "full_website",
+      "avg_deal_usd": 1499,
+      "avg_deal_inr": 125000,
+      "conversion_rate": 0.05,
+      "target_markets": ["usa_primary", "australia_primary", "canada_primary", "uk_primary", "uae_primary"],
+      "email_hook": "I noticed {business_name}'s website doesn't capture leads automatically — most agents I work with get 10+ extra inquiries/month after we add that."
+    },
+    {
+      "name": "photography",
+      "keywords": ["photographer", "photography studio", "wedding photographer", "portrait photographer", "commercial photographer", "videographer"],
+      "pain_points": ["no portfolio online", "no booking page", "no pricing page", "slow/outdated website"],
+      "best_service": "portfolio_website",
+      "avg_deal_usd": 549,
+      "avg_deal_inr": 46000,
+      "conversion_rate": 0.13,
+      "target_markets": ["usa_primary", "uk_primary", "australia_primary", "canada_primary"],
+      "email_hook": "I found your Instagram but your website doesn't do your work justice — I can build you a portfolio site that actually books clients."
+    },
+    {
+      "name": "local_service",
+      "keywords": ["plumber", "electrician", "HVAC", "roofing", "landscaping", "lawn care", "pest control", "cleaning service", "painting contractor", "handyman"],
+      "pain_points": ["no website at all", "no service area listed", "no contact form", "no reviews section"],
+      "best_service": "landing_page",
+      "avg_deal_usd": 449,
+      "avg_deal_inr": 37000,
+      "conversion_rate": 0.15,
+      "target_markets": ["usa_primary", "canada_primary", "australia_primary", "uk_primary"],
+      "email_hook": "I Googled '{niche} near {city}' and {business_name} didn't show up on the first page — I can fix that with a quick landing page."
+    },
+    {
+      "name": "coaching",
+      "keywords": ["life coach", "business coach", "executive coach", "career coach", "health coach", "relationship coach", "online course", "consultant"],
+      "pain_points": ["no professional website", "no course page", "no testimonials", "no email capture"],
+      "best_service": "full_website",
+      "avg_deal_usd": 799,
+      "avg_deal_inr": 67000,
+      "conversion_rate": 0.09,
+      "target_markets": ["usa_primary", "uk_primary", "australia_primary", "canada_primary"],
+      "email_hook": "I checked out {business_name}'s site and noticed you're not capturing email leads — coaches who add that see 2x more discovery calls."
+    },
+    {
+      "name": "ecommerce",
+      "keywords": ["online store", "boutique", "clothing store", "fashion brand", "jewelry store", "home decor", "artisan", "handmade shop", "dropshipping"],
+      "pain_points": ["slow site", "poor mobile experience", "no product SEO", "no abandoned cart recovery", "low conversion rate"],
+      "best_service": "ecommerce_website",
+      "avg_deal_usd": 1299,
+      "avg_deal_inr": 108000,
+      "conversion_rate": 0.05,
+      "target_markets": ["usa_primary", "uk_primary", "australia_primary", "canada_primary"],
+      "email_hook": "I ran your site through PageSpeed — it's loading in 8 seconds on mobile. That's costing you roughly 50% of potential sales."
+    },
+    {
+      "name": "startup_saas",
+      "keywords": ["startup", "SaaS", "software company", "app", "platform", "tech startup", "B2B software", "productivity tool"],
+      "pain_points": ["weak landing page", "no clear value proposition", "low trial signups", "poor messaging"],
+      "best_service": "landing_page",
+      "avg_deal_usd": 1999,
+      "avg_deal_inr": 167000,
+      "conversion_rate": 0.04,
+      "target_markets": ["usa_primary", "uk_primary", "singapore", "canada_primary"],
+      "email_hook": "I reviewed {business_name}'s homepage — your value prop isn't clear within 5 seconds. I can rewrite and redesign it to fix that."
+    },
+    {
+      "name": "hotel_bnb",
+      "keywords": ["hotel", "motel", "bed and breakfast", "B&B", "inn", "lodge", "vacation rental", "boutique hotel", "resort"],
+      "pain_points": ["no direct booking system", "relies only on OTAs", "poor photos", "no local SEO"],
+      "best_service": "full_website",
+      "avg_deal_usd": 999,
+      "avg_deal_inr": 83000,
+      "conversion_rate": 0.08,
+      "target_markets": ["usa_primary", "uk_primary", "australia_primary", "uae_primary"],
+      "email_hook": "Every booking you get through Booking.com costs you 15-25% in commission — I can build you a direct booking site that pays for itself in one reservation."
+    }
+  ]
+}

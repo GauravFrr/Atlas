@@ -1,0 +1,49 @@
+{
+  "_strategy_note": "PRIMARY: USD pricing for foreign clients. INR shown for reference only. Phase 1 (months 1-2): Price 30% below market to get reviews fast. Phase 2 (month 3+): Raise to market rate. Phase 3 (month 6+): Premium pricing.",
+  "fiverr_gigs_usd": [
+    {"service": "AI Chatbot Setup", "starter": 30, "standard": 75, "premium": 150, "currency": "USD"},
+    {"service": "Landing Page (1 page)", "starter": 50, "standard": 100, "premium": 200, "currency": "USD"},
+    {"service": "Full Website (5 pages)", "starter": 150, "standard": 300, "premium": 600, "currency": "USD"},
+    {"service": "Cold Email Sequence (5 emails)", "starter": 35, "standard": 75, "premium": 150, "currency": "USD"},
+    {"service": "SEO Blog Post (1500w)", "starter": 20, "standard": 40, "premium": 80, "currency": "USD"},
+    {"service": "Brand Kit (logo+colors+fonts)", "starter": 50, "standard": 100, "premium": 200, "currency": "USD"},
+    {"service": "YouTube Thumbnails (5)", "starter": 20, "standard": 40, "premium": 75, "currency": "USD"},
+    {"service": "Social Media Pack (30 posts)", "starter": 35, "standard": 70, "premium": 130, "currency": "USD"},
+    {"service": "Ad Copy Set (3 variants)", "starter": 25, "standard": 55, "premium": 100, "currency": "USD"},
+    {"service": "YouTube Script (10 min)", "starter": 30, "standard": 60, "premium": 120, "currency": "USD"},
+    {"service": "LinkedIn Profile Rewrite", "starter": 35, "standard": 75, "premium": 140, "currency": "USD"},
+    {"service": "WhatsApp Chatbot Setup", "starter": 75, "standard": 150, "premium": 300, "currency": "USD"},
+    {"service": "Email Newsletter Template", "starter": 25, "standard": 50, "premium": 100, "currency": "USD"},
+    {"service": "Press Release", "starter": 30, "standard": 60, "premium": 120, "currency": "USD"}
+  ],
+  "direct_outreach_usd": [
+    {"service": "Landing Page (1 page + SEO)", "intro": 299, "standard": 499, "premium": 799},
+    {"service": "Basic Website (3 pages)", "intro": 399, "standard": 699, "premium": 1099},
+    {"service": "Full Website (5 pages + blog + SEO)", "intro": 699, "standard": 1199, "premium": 1999},
+    {"service": "E-commerce Website", "intro": 899, "standard": 1499, "premium": 2499},
+    {"service": "AI Chatbot (website widget)", "intro": 399, "standard": 749, "premium": 1299},
+    {"service": "AI Chatbot + WhatsApp Integration", "intro": 599, "standard": 999, "premium": 1799},
+    {"service": "Cold Email System (5-step sequence)", "intro": 499, "standard": 899, "premium": 1499},
+    {"service": "Brand Kit (full identity)", "intro": 299, "standard": 499, "premium": 899},
+    {"service": "Social Media Pack (30 posts)", "intro": 149, "standard": 299, "premium": 499}
+  ],
+  "retainers_usd_per_month": [
+    {"service": "Social Media Management (20 posts/mo)", "intro": 299, "standard": 499, "premium": 999},
+    {"service": "Chatbot Maintenance + Monthly Updates", "intro": 149, "standard": 249, "premium": 449},
+    {"service": "Content Writing (4 SEO articles/mo)", "intro": 299, "standard": 499, "premium": 799},
+    {"service": "Lead Gen Service (50 qualified leads/mo)", "intro": 399, "standard": 699, "premium": 1199},
+    {"service": "White Label Partner (unlimited projects)", "intro": 799, "standard": 1299, "premium": 2499}
+  ],
+  "high_ticket_usd": [
+    {"service": "Full Digital Presence Package", "min": 1499, "max": 4999},
+    {"service": "AI Business Integration Audit + Setup", "min": 1999, "max": 7999},
+    {"service": "Custom SaaS MVP (no-code/low-code)", "min": 2999, "max": 14999},
+    {"service": "Done-For-You Marketing System", "min": 2499, "max": 9999}
+  ],
+  "current_phase": "intro",
+  "phase_notes": {
+    "intro": "Month 1-2: Price 30-40% below market rate to get Fiverr reviews fast. Accept every job.",
+    "standard": "Month 3-5: Raise to market rate. Start being selective on project types.",
+    "premium": "Month 6+: Premium pricing. Offer packages, push retainers."
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "_strategy_note": "PRIMARY FOCUS: Foreign clients (US, UK, Canada, Australia, UAE, Singapore). They pay 5-10x more than local clients. All pricing is in USD. Indian clients are secondary only when pipeline is dry.",
+  "india_tier1": [
+    "Mumbai", "Delhi", "Bangalore", "Hyderabad", "Chennai"
+  ],
+  "india_tier2": [
+    "Pune", "Ahmedabad", "Kolkata", "Lucknow", "Jaipur"
+  ],
+  "usa_primary": [
+    "New York", "Los Angeles", "Chicago", "Houston", "Phoenix",
+    "Philadelphia", "San Antonio", "San Diego", "Dallas", "San Jose",
+    "Austin", "Jacksonville", "Fort Worth", "Columbus", "Charlotte",
+    "Indianapolis", "San Francisco", "Seattle", "Denver", "Nashville",
+    "Oklahoma City", "El Paso", "Washington DC", "Louisville", "Las Vegas",
+    "Memphis", "Portland", "Baltimore", "Milwaukee", "Albuquerque",
+    "Tucson", "Fresno", "Sacramento", "Mesa", "Atlanta",
+    "Omaha", "Colorado Springs", "Raleigh", "Long Beach", "Virginia Beach",
+    "Miami", "Tampa", "Orlando", "Minneapolis", "Arlington"
+  ],
+  "uk_primary": [
+    "London", "Manchester", "Birmingham", "Glasgow", "Leeds",
+    "Sheffield", "Edinburgh", "Liverpool", "Bristol", "Cardiff",
+    "Nottingham", "Leicester", "Coventry", "Bradford", "Belfast",
+    "Newcastle", "Southampton", "Brighton", "Derby", "Plymouth"
+  ],
+  "canada_primary": [
+    "Toronto", "Vancouver", "Montreal", "Calgary", "Edmonton",
+    "Ottawa", "Winnipeg", "Hamilton", "Quebec City", "Victoria",
+    "Halifax", "London Ontario", "Waterloo", "Saskatoon", "Regina"
+  ],
+  "australia_primary": [
+    "Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide",
+    "Gold Coast", "Newcastle NSW", "Canberra", "Wollongong", "Hobart",
+    "Geelong", "Townsville", "Cairns", "Darwin", "Toowoomba"
+  ],
+  "uae_primary": [
+    "Dubai", "Abu Dhabi", "Sharjah", "Ajman", "Ras Al Khaimah",
+    "Fujairah", "Al Ain", "Umm Al Quwain"
+  ],
+  "singapore": [
+    "Singapore"
+  ],
+  "new_zealand": [
+    "Auckland", "Wellington", "Christchurch", "Hamilton", "Tauranga"
+  ],
+  "priority_order": [
+    "usa_primary",
+    "uk_primary",
+    "australia_primary",
+    "canada_primary",
+    "uae_primary",
+    "singapore",
+    "new_zealand",
+    "india_tier1",
+    "india_tier2"
+  ],
+  "search_combinations": [
+    "{niche} in {city}",
+    "best {niche} {city}",
+    "{niche} near {city}",
+    "{city} {niche}",
+    "top {niche} {city}",
+    "{niche} {city} no website",
+    "small {niche} {city}"
+  ]
+}
