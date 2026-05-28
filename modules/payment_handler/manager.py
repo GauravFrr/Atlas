@@ -145,24 +145,38 @@ class Manager:
                 payload=payload,
             )
 
+            lead_for_handoff = None
             if payment.lead_id:
-                lead = await self.leads.get_by_id(session, payment.lead_id)
-                if lead:
-                    lead.status = LeadStatus.CLIENT
-                    data = dict(lead.enrichment_data or {})
+                lead_for_handoff = await self.leads.get_by_id(session, payment.lead_id)
+                if lead_for_handoff:
+                    lead_for_handoff.status = LeadStatus.CLIENT
+                    data = dict(lead_for_handoff.enrichment_data or {})
                     data["payment_id"] = payment.id
                     data["payment_link"] = payment.short_url
-                    lead.enrichment_data = data
+                    lead_for_handoff.enrichment_data = data
 
             await session.commit()
 
-            amount_inr = payment.amount_paise / 100
-            client = payment.customer_name or payment.customer_email or "Client"
-            await self.notifier.send_payment_received(
-                amount=f"₹{amount_inr:,.0f}",
-                client=client,
-                method="Razorpay",
-            )
+            if lead_for_handoff:
+                from modules.service_delivery.payment_handoff import (
+                    start_delivery_after_payment,
+                )
+
+                await start_delivery_after_payment(
+                    lead_for_handoff,
+                    payment,
+                    self.settings,
+                    notifier=self.notifier,
+                )
+                client = lead_for_handoff.business_name
+            else:
+                amount_inr = payment.amount_paise / 100
+                client = payment.customer_name or payment.customer_email or "Client"
+                await self.notifier.send_payment_received(
+                    amount=f"₹{amount_inr:,.0f}",
+                    client=client,
+                    method="Razorpay",
+                )
 
         logger.success(f"[Payment] Confirmed {payment.id} for {client}")
         return {"status": "confirmed", "payment_id": payment.id}

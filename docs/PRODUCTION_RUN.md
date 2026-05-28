@@ -78,11 +78,31 @@ python start_agent.py
 
 ---
 
+## Post-payment delivery (blueprint §22)
+
+When Razorpay webhook confirms payment:
+
+1. Lead → `client`
+2. `enrichment_data.delivery` = checklist (website / rebuild / automation)
+3. **Telegram** — paid + demo URL + numbered checklist
+
+Test without paying:
+
+```powershell
+python scripts/test_payment_handoff.py --email LEAD@EMAIL.com --dry-run
+python scripts/test_payment_handoff.py --email LEAD@EMAIL.com
+```
+
+Atlas P2 may remind you if delivery stays `pending`.
+
+---
+
 ## New features in this build
 
 | Feature | What |
 |---------|------|
 | **Pricing tiers** | Razorpay amount from lead pitch (`utils/pricing_tiers.py`) |
+| **Post-payment handoff** | `modules/service_delivery/payment_handoff.py` |
 | **Agent logs** | Each tick task → `agent_logs` table |
 | **Resume dedupe** | Same incomplete lead skipped for `RESUME_COOLDOWN_MINUTES` (default 25) |
 | **Production stack** | `scripts/run_production_stack.py` |

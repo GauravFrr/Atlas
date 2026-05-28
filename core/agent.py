@@ -185,6 +185,20 @@ class Agent:
                 state["payment_webhooks_pending"] = await pay_repo.list_webhook_pending(
                     session, limit=5
                 )
+
+                pending_delivery = await repo.list_pending_deliveries(session, limit=5)
+                state["pending_deliverables"] = [
+                    {
+                        "id": lead.id,
+                        "lead_id": lead.id,
+                        "business_name": lead.business_name,
+                        "email": lead.email,
+                        "package": (lead.enrichment_data or {})
+                        .get("delivery", {})
+                        .get("package_label"),
+                    }
+                    for lead in pending_delivery
+                ]
         except Exception as e:
             logger.warning(f"[State] DB snapshot partial: {e}")
 

@@ -518,3 +518,28 @@ class LeadRepository:
             if len(out) >= limit:
                 break
         return out
+
+    async def list_pending_deliveries(
+        self,
+        session: AsyncSession,
+        *,
+        limit: int = 10,
+    ) -> list[Lead]:
+        """Paid clients with delivery.checklist still pending (Atlas P2)."""
+        result = await session.execute(
+            select(Lead)
+            .where(
+                Lead.is_deleted.is_(False),
+                Lead.status == LeadStatus.CLIENT,
+            )
+            .order_by(Lead.updated_at.desc())
+            .limit(max(limit * 5, 20))
+        )
+        out: list[Lead] = []
+        for lead in result.scalars():
+            delivery = (lead.enrichment_data or {}).get("delivery") or {}
+            if delivery.get("status") == "pending":
+                out.append(lead)
+            if len(out) >= limit:
+                break
+        return out

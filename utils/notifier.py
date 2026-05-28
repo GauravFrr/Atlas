@@ -56,7 +56,7 @@ class Notifier:
         await self._send(formatted)
 
     async def send_payment_received(self, amount: str, client: str, method: str) -> None:
-        """Notify of a payment received."""
+        """Notify of a payment received (no lead / fallback)."""
         msg = (
             f"💰 PAYMENT RECEIVED\n"
             f"━━━━━━━━━━━━━━━━━━\n"
@@ -67,6 +67,12 @@ class Notifier:
             f"Agent starting work now."
         )
         await self.send_urgent(msg)
+
+    async def send_payment_delivery_handoff(self, message: str) -> None:
+        """Paid client — delivery checklist for operator (blueprint §22)."""
+        formatted = f"💰 {message}"
+        logger.critical(f"PAYMENT DELIVERY: {message[:200]}...")
+        await self._send(formatted)
 
     async def send_new_order(self, order_id: str, service: str, budget: str) -> None:
         """Notify of a new Fiverr order."""
