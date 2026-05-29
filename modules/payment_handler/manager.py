@@ -35,6 +35,7 @@ class Manager:
         *,
         amount_inr: int | None = None,
         description: str | None = None,
+        reference_id: str | None = None,
     ) -> dict[str, Any]:
         """Create Razorpay payment link and persist to DB."""
         if not self.razorpay.is_configured:
@@ -79,12 +80,13 @@ class Manager:
             if not email:
                 return {"ok": False, "error": "lead_has_no_email"}
 
+            rz_ref = (reference_id or lead.id).strip()[:40]
             data = await self.razorpay.create_payment_link(
                 amount_inr=amount,
                 description=desc,
                 customer_name=lead.business_name,
                 customer_email=email,
-                reference_id=lead.id,
+                reference_id=rz_ref,
                 notes={
                     "lead_id": lead.id,
                     "business": lead.business_name[:80],
@@ -105,7 +107,7 @@ class Manager:
                 customer_name=lead.business_name,
                 razorpay_payment_link_id=link_id,
                 short_url=short_url,
-                reference_id=lead.id,
+                reference_id=rz_ref,
                 notes={"lead_id": lead.id},
             )
             await session.commit()
@@ -211,7 +213,7 @@ class Manager:
                 return {"status": "queued", "payment_id": payment.id}
 
         return await self.process_webhook(
-            {"payment_id": payment.id, "payload": payload}
+            webhook={"payment_id": payment.id, "payload": payload}
         )
 
     async def _find_payment_from_payload(

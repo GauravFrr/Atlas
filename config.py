@@ -103,6 +103,14 @@ class Settings(BaseSettings):
     # ══════════════════════════════════════════
     telegram_bot_token: str = Field(default="")
     telegram_chat_id: str = Field(default="")
+    telegram_bot_display_name: str = Field(
+        default="Atlas",
+        description="Name shown in Telegram bot profile and panel headers",
+    )
+    telegram_owner_user_ids: str = Field(
+        default="",
+        description="Comma-separated Telegram user IDs allowed besides TELEGRAM_CHAT_ID (owner-only bot)",
+    )
     telegram_close_approval: bool = Field(
         default=True,
         description="Send close-email drafts to Telegram with Approve / Recreate / Skip buttons",

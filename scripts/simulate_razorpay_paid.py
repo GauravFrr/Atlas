@@ -67,6 +67,11 @@ async def main() -> None:
         default="http://127.0.0.1:8787",
         help="Webhook base URL (no trailing path)",
     )
+    parser.add_argument(
+        "--direct",
+        action="store_true",
+        help="Call payment handler in-process (no HTTP; use if webhook server is stale)",
+    )
     args = parser.parse_args()
 
     settings = get_settings()
@@ -95,6 +100,18 @@ async def main() -> None:
             sys.exit(1)
 
     body_dict = _payload_for_payment(link_id, lead.id)
+
+    if args.direct:
+        from modules.payment_handler.manager import Manager
+
+        mgr = Manager(settings)
+        result = await mgr.handle_webhook_payload(body_dict)
+        print(f"Direct process → {result}")
+        if result.get("status") not in ("confirmed", "already_confirmed"):
+            sys.exit(1)
+        print("Check Telegram for PAID — START DELIVERY checklist.")
+        return
+
     body = json.dumps(body_dict).encode("utf-8")
     headers = {"Content-Type": "application/json"}
     secret = (settings.razorpay_webhook_secret or "").strip()

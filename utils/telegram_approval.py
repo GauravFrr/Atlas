@@ -5,11 +5,14 @@ Run: python scripts/run_telegram_approvals.py
 
 from __future__ import annotations
 
+from html import escape
+
 from loguru import logger
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Application, CallbackQueryHandler, ContextTypes
 
 from config import Settings
+from utils.telegram_bot.owner import is_owner
 from modules.outreach.close_approval import CloseApprovalService
 from modules.outreach.close_approval_store import register as register_approval_id
 
@@ -20,16 +23,19 @@ def _reply_keyboard(approval_id: str) -> InlineKeyboardMarkup:
         [
             [
                 InlineKeyboardButton(
-                    "Approve and send reply",
+                    "✅ Approve & send",
                     callback_data=f"close:approve:{aid}",
                 )
             ],
             [
                 InlineKeyboardButton(
-                    "Recreate draft",
+                    "🔄 Recreate",
                     callback_data=f"close:recreate:{aid}",
                 ),
-                InlineKeyboardButton("Skip", callback_data=f"close:skip:{aid}"),
+                InlineKeyboardButton("⏭ Skip", callback_data=f"close:skip:{aid}"),
+            ],
+            [
+                InlineKeyboardButton("🏠 Menu", callback_data="atlas:menu"),
             ],
         ]
     )
@@ -41,16 +47,19 @@ def _payment_keyboard(approval_id: str) -> InlineKeyboardMarkup:
         [
             [
                 InlineKeyboardButton(
-                    "Approve and send payment link",
+                    "✅ Approve & send link",
                     callback_data=f"close:approve:{aid}",
                 )
             ],
             [
                 InlineKeyboardButton(
-                    "Recreate",
+                    "🔄 Recreate",
                     callback_data=f"close:recreate:{aid}",
                 ),
-                InlineKeyboardButton("Skip", callback_data=f"close:skip:{aid}"),
+                InlineKeyboardButton("⏭ Skip", callback_data=f"close:skip:{aid}"),
+            ],
+            [
+                InlineKeyboardButton("🏠 Menu", callback_data="atlas:menu"),
             ],
         ]
     )
@@ -63,11 +72,11 @@ def _payment_prompt_keyboard(lead_id: str) -> InlineKeyboardMarkup:
         [
             [
                 InlineKeyboardButton(
-                    "Draft payment link email",
+                    "💳 Draft payment email",
                     callback_data=f"close:paydraft:lead_{short}",
                 )
             ],
-            [InlineKeyboardButton("Not now", callback_data=f"close:paylater:lead_{short}")],
+            [InlineKeyboardButton("⏭ Not now", callback_data=f"close:paylater:lead_{short}")],
         ]
     )
 
@@ -82,28 +91,33 @@ def format_approval_message(
     kind: str = "interested_reply",
     script_label: str = "",
 ) -> str:
-    preview = body if len(body) <= 1200 else body[:1200] + "\n\n... (truncated)"
+    preview = body if len(body) <= 1200 else body[:1200] + "\n\n<i>… truncated</i>"
+    e = escape
     if kind == "payment_link":
-        header = "PAYMENT LINK EMAIL — approve to send"
-        note = "(Send only after they agreed on scope / call — not with the first reply)"
+        header = "💳 <b>PAYMENT LINK EMAIL</b>"
+        note = "<i>Send after they agreed — not with first reply</i>"
     else:
-        header = "REPLY EMAIL — approve to send"
-        note = "(Soft reply only — no payment link yet)"
-    return "\n".join(
+        header = "✉️ <b>REPLY EMAIL</b>"
+        note = "<i>Soft reply only — no payment link in this email</i>"
+    lines = [
+        header,
+        note,
+        "━━━━━━━━━━━━━━━━━━",
+        f"🏢 <b>{e(business_name)}</b>",
+        f"📧 <code>{e(email)}</code>",
+        f"🏷 <code>{e(classification)}</code>",
+    ]
+    if script_label:
+        lines.append(f"📜 {e(script_label)}")
+    lines.extend(
         [
-            header,
-            note,
-            "━━━━━━━━━━━━━━━━━━",
-            f"Lead: {business_name}",
-            f"To: {email}",
-            f"Class: {classification}",
-            *( [f"Script: {script_label}"] if script_label else [] ),
-            f"Subject: {subject}",
+            f"📌 <b>{e(subject)}</b>",
             "",
-            preview,
+            e(preview),
             "━━━━━━━━━━━━━━━━━━",
         ]
     )
+    return "\n".join(lines)
 
 
 class TelegramApprovalNotifier:
@@ -147,7 +161,9 @@ class TelegramApprovalNotifier:
         msg = await self._bot.send_message(
             chat_id=self.settings.telegram_chat_id,
             text=text,
+            parse_mode="HTML",
             reply_markup=kb,
+            disable_web_page_preview=True,
         )
         return msg.message_id
 
@@ -158,13 +174,14 @@ class TelegramApprovalNotifier:
         if not self._bot or not self.settings.telegram_chat_id:
             return
         text = (
-            f"Reply sent to {email} ({business_name}).\n\n"
-            "When they agree to move forward, draft the payment-link email.\n"
-            "Do not send payment with the first reply — it feels pushy."
+            f"✅ <b>Reply sent</b> to <code>{escape(email)}</code>\n"
+            f"🏢 {escape(business_name)}\n\n"
+            "<i>When they agree, draft the payment-link email below.</i>"
         )
         await self._bot.send_message(
             chat_id=self.settings.telegram_chat_id,
             text=text,
+            parse_mode="HTML",
             reply_markup=_payment_prompt_keyboard(lead_id),
         )
 
@@ -193,13 +210,9 @@ async def store_telegram_message_id(
 
 
 def build_application(settings: Settings) -> Application:
-    if not settings.has_telegram:
-        raise RuntimeError("Set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in .env")
+    from utils.telegram_bot.app import build_application as build_atlas_app
 
-    app = Application.builder().token(settings.telegram_bot_token).build()
-    app.bot_data["settings"] = settings
-    app.add_handler(CallbackQueryHandler(_on_callback, pattern=r"^close:"))
-    return app
+    return build_atlas_app(settings)
 
 
 async def _on_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -208,9 +221,8 @@ async def _on_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         return
 
     settings: Settings = context.application.bot_data["settings"]
-    chat_id = str(update.effective_chat.id) if update.effective_chat else ""
-    if chat_id != str(settings.telegram_chat_id).strip():
-        await query.answer("Unauthorized", show_alert=True)
+    if not is_owner(update, settings):
+        await query.answer("Owner only", show_alert=True)
         return
 
     parts = query.data.split(":", 2)

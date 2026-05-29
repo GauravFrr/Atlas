@@ -1,14 +1,14 @@
 """
-Listen for Telegram inline buttons (Approve / Recreate / Skip) on close-email drafts.
+Atlas Telegram bot — owner panel + Approve / Recreate / Skip on email drafts.
 
-Keep this running while the agent is on (separate terminal):
-
-  .\\venv\\Scripts\\python.exe scripts/run_telegram_approvals.py
+  python scripts/run_telegram_approvals.py
 
 Requires in .env:
   TELEGRAM_BOT_TOKEN
   TELEGRAM_CHAT_ID
   SMTP_* (for Approve and send)
+
+Commands: /start /menu /status /health /leads /help
 """
 
 from __future__ import annotations
@@ -39,8 +39,10 @@ def main() -> None:
 
     asyncio.run(init_db())
     app = build_application(settings)
-    print("Telegram approval bot listening (Approve / Recreate / Skip)...")
+    name = getattr(settings, "telegram_bot_display_name", None) or "Atlas"
+    print(f"{name} bot listening — owner panel + email approvals")
     print(f"Owner chat id: {settings.telegram_chat_id}")
+    print("Send /start in Telegram to open the menu")
     # run_polling owns the event loop — do not wrap in asyncio.run() (Windows error)
     app.run_polling(drop_pending_updates=True)
 

@@ -94,8 +94,12 @@ async def main() -> None:
                 await session.commit()
                 print(f"Cancelled previous pending link {old.id}")
 
+    rz_ref = None
+    if args.force_new and lead_id:
+        rz_ref = f"{lead_id}-{uuid.uuid4().hex[:8]}"
+
     result = await mgr.create_link_for_lead(
-        lead_id, amount_inr=args.amount
+        lead_id, amount_inr=args.amount, reference_id=rz_ref
     )
     if result.get("ok"):
         print(f"OK — INR {result.get('amount_inr')} link:\n{result.get('short_url')}")
