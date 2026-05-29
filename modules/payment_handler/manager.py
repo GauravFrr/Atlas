@@ -54,6 +54,7 @@ class Manager:
                     "ok": True,
                     "payment_id": existing.id,
                     "short_url": existing.short_url,
+                    "amount_inr": int(existing.amount_paise / 100),
                     "reused": True,
                 }
 

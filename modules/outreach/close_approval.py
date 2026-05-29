@@ -143,12 +143,29 @@ class CloseApprovalService:
         maps = lead_to_maps_scan(lead)
         orch = CampaignOrchestrator(self.settings)
         domain = orch._domain_for_lead(lead, maps.place_id)
-        sent = orch._try_smtp(
-            maps,
-            {"subject": approval["subject"], "body": approval["body"]},
-            domain,
-            db_lead=lead,
+        smtp_cfg = orch._smtp_for_close_reply(lead, domain)
+        if not smtp_cfg:
+            logger.warning("[CloseApproval] No SMTP for locked mailbox / domain pool")
+            return {"ok": False, "error": "smtp_not_configured"}
+
+        sent = orch.email_engine.send_email(
+            to_email=email,
+            subject=approval["subject"],
+            body=approval["body"],
+            smtp_config=smtp_cfg,
+            dry_run=False,
         )
+        if sent:
+            from utils.mailbox_lock import lock_mailbox_on_lead
+
+            lock_mailbox_on_lead(
+                lead,
+                smtp_cfg=smtp_cfg,
+                domain=domain,
+                send_channel=str(
+                    (lead.enrichment_data or {}).get("send_channel") or "smtp"
+                ),
+            )
         if not sent:
             return {"ok": False, "error": "smtp_send_failed"}
 

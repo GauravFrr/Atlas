@@ -43,6 +43,15 @@ async def list_webhooks(client: httpx.AsyncClient, api_key: str) -> list[dict[st
     return list(data.get("items") or data.get("webhooks") or [])
 
 
+async def delete_webhook(
+    client: httpx.AsyncClient, api_key: str, webhook_id: str
+) -> bool:
+    resp = await client.delete(
+        f"{V2}/webhooks/{webhook_id}", headers=_headers(api_key)
+    )
+    return resp.status_code < 400
+
+
 async def create_webhook(
     client: httpx.AsyncClient,
     api_key: str,
@@ -83,6 +92,11 @@ async def main() -> None:
     )
     parser.add_argument("--list", action="store_true", help="List existing webhooks only")
     parser.add_argument("--all-campaigns", action="store_true", help="Do not filter by campaign")
+    parser.add_argument(
+        "--replace",
+        action="store_true",
+        help="Delete existing webhooks for this URL, then re-create (fixes disabled/no-header)",
+    )
     args = parser.parse_args()
 
     api_key = (os.environ.get("INSTANTLY_API_KEY") or "").strip()
@@ -106,10 +120,24 @@ async def main() -> None:
             return
 
         target = args.url.strip()
-        for wh in existing:
-            if str(wh.get("target_hook_url") or "").rstrip("/") == target.rstrip("/"):
+        matching = [
+            wh
+            for wh in existing
+            if str(wh.get("target_hook_url") or "").rstrip("/") == target.rstrip("/")
+        ]
+
+        if args.replace:
+            for wh in matching:
+                wid = str(wh.get("id") or "")
+                if wid and await delete_webhook(client, api_key, wid):
+                    print(f"Deleted old webhook {wid} (status was {wh.get('status')})")
+        else:
+            for wh in matching:
                 if wh.get("event_type") == "reply_received":
-                    print(f"Already registered: {wh.get('id')} ({wh.get('name')})")
+                    print(
+                        f"Already registered: {wh.get('id')} "
+                        f"(status={wh.get('status')}). Use --replace to recreate with header."
+                    )
                     return
 
         name = "Atlas Railway - reply_received"

@@ -35,6 +35,11 @@ async def main() -> None:
         help="Create link without a lead row (Razorpay test / your own email)",
     )
     p.add_argument("--amount", type=int, help="Amount in INR (default from config)")
+    p.add_argument(
+        "--force-new",
+        action="store_true",
+        help="Create a new link even if a pending link exists",
+    )
     args = p.parse_args()
 
     if not args.email and not args.lead_id:
@@ -74,6 +79,20 @@ async def main() -> None:
                 print("  python scripts/list_leads_with_email.py")
                 sys.exit(1)
             lead_id = lead.id
+
+    if args.force_new and lead_id:
+        from constants import PaymentStatus
+        from database.repositories.payment_repository import PaymentRepository
+
+        factory = get_session_factory()
+        async with factory() as session:
+            old = await PaymentRepository().get_by_lead(
+                session, lead_id, pending_only=True
+            )
+            if old:
+                old.status = PaymentStatus.CANCELLED
+                await session.commit()
+                print(f"Cancelled previous pending link {old.id}")
 
     result = await mgr.create_link_for_lead(
         lead_id, amount_inr=args.amount

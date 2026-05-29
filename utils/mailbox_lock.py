@@ -107,13 +107,18 @@ def resolve_smtp_config(
     settings: Any,
     pool: DomainPool,
     outreach_domain: OutreachDomain | None = None,
+    *,
+    for_close_reply: bool = False,
 ) -> dict[str, Any] | None:
     """
     SMTP config for this lead — always uses locked outbound_mailbox when set.
+
+    Cold outreach may use Instantly (send_channel=instantly). Telegram-approved
+  replies and payment emails still send via SMTP from the locked mailbox.
     """
     data = getattr(lead, "enrichment_data", None) or {}
     channel = str(data.get("send_channel") or "")
-    if channel == "instantly":
+    if channel == "instantly" and not for_close_reply:
         return None
 
     locked_email = get_locked_mailbox(lead)

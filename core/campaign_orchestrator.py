@@ -492,10 +492,26 @@ class CampaignOrchestrator:
         self,
         lead: Any,
         outreach_domain: OutreachDomain | None = None,
+        *,
+        for_close_reply: bool = False,
     ) -> dict[str, str | int | bool] | None:
         from utils.mailbox_lock import resolve_smtp_config
 
-        return resolve_smtp_config(lead, self.settings, self.domain_pool, outreach_domain)
+        return resolve_smtp_config(
+            lead,
+            self.settings,
+            self.domain_pool,
+            outreach_domain,
+            for_close_reply=for_close_reply,
+        )
+
+    def _smtp_for_close_reply(
+        self,
+        lead: Any,
+        outreach_domain: OutreachDomain | None = None,
+    ) -> dict[str, str | int | bool] | None:
+        """SMTP for Telegram-approved reply / payment (even if cold send was Instantly)."""
+        return self._smtp_for_lead(lead, outreach_domain, for_close_reply=True)
 
     def _save_local_draft(
         self, to_email: str, subject: str, body: str

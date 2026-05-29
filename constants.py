@@ -117,6 +117,7 @@ class PaymentStatus:
     CONFIRMED = "confirmed"
     FAILED = "failed"
     REFUNDED = "refunded"
+    CANCELLED = "cancelled"
 
 # ══════════════════════════════════════════════
 # PAYMENT PROVIDERS
