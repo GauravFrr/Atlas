@@ -64,14 +64,7 @@ _CHECKLISTS: dict[str, tuple[str, list[str]]] = {
 
 def demo_url_for_lead(lead: Lead, settings: Settings) -> str:
     data = lead.enrichment_data or {}
-    url = str(data.get("demo_url") or data.get("public_demo_url") or "").strip()
-    if url:
-        return url
-    if lead.demo_site_path and getattr(settings, "demo_site_base_url", None):
-        base = str(settings.demo_site_base_url).rstrip("/")
-        slug = Path(lead.demo_site_path).stem
-        return f"{base}/{slug}/index.html"
-    return ""
+    return str(data.get("demo_url") or data.get("public_demo_url") or "").strip()
 
 
 def build_delivery_record(

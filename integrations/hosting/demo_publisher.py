@@ -1,5 +1,6 @@
 """
-Publish demos: random Hostinger / Netlify per lead, Cloudflare R2 last.
+Publish demos: Hostinger (FTP) first, Cloudflare R2 fallback.
+Netlify is opt-in only via demo_upload_mode=netlify and demo_skip_netlify=false.
 """
 
 from __future__ import annotations
@@ -27,15 +28,15 @@ class _PublishTarget:
 class DemoPublisher:
     """
     demo_upload_mode:
-      auto     — see demo_host_strategy (default: random hosts, R2 backup)
-      netlify  — Netlify pool only
+      auto     — Hostinger pool, then R2 (see demo_host_strategy)
       ftp      — Hostinger only
       r2       — R2 only
+      netlify  — Netlify only (disabled when demo_skip_netlify=true)
       local    — No upload
 
     demo_host_strategy (auto only):
-      random   — shuffle demos.gauravxd.dev, demos.urmikexd.me, Netlify each time
-      priority — Netlify → all Hostinger sites → R2
+      random   — shuffle Hostinger sites each demo, then R2
+      priority — all Hostinger sites in order, then R2
     """
 
     def __init__(self, settings: Any) -> None:
@@ -50,14 +51,21 @@ class DemoPublisher:
             getattr(settings, "demo_host_strategy", "random") or "random"
         ).lower()
         self.prefer_r2 = bool(getattr(settings, "demo_prefer_r2", False))
+        self.skip_netlify = bool(getattr(settings, "demo_skip_netlify", True))
+
+    def _netlify_allowed(self) -> bool:
+        return not self.skip_netlify and self.mode == "netlify"
 
     def _effective_mode(self) -> str:
         m = self.mode
+        if m == "netlify" and self.skip_netlify:
+            logger.warning("[Demo] Netlify disabled (demo_skip_netlify) — using auto")
+            m = "auto"
         if m != "auto":
             return m
         if self.prefer_r2 and self.r2.is_configured:
             return "r2"
-        if self.netlify_pool.enabled or self.hostinger_pool.enabled:
+        if self.hostinger_pool.enabled:
             return "auto"
         if self.r2.is_configured:
             return "r2"
@@ -72,13 +80,6 @@ class DemoPublisher:
                     label=site.demo_base_url or site.name,
                     site=site,
                 )
-            )
-        usable_netlify = self.netlify_pool.usable_accounts()
-        if usable_netlify:
-            targets.append(_PublishTarget(kind="netlify", label="netlify"))
-        elif self.netlify_pool.accounts:
-            logger.warning(
-                "[Demo] All Netlify accounts low on credits — using Hostinger/R2 only"
             )
         random.shuffle(targets)
         return targets
@@ -159,7 +160,7 @@ class DemoPublisher:
     async def _publish_random(
         self, path: Path, slug: str, demo_base_url: str | None
     ) -> str | None:
-        """Pick a random host each demo; try the rest; then R2."""
+        """Shuffle Hostinger sites per demo; try each; then Cloudflare R2."""
         targets = self._random_targets()
         if not targets:
             return await self._try_r2(path, slug, demo_base_url)
@@ -167,19 +168,12 @@ class DemoPublisher:
         labels = [t.label for t in targets]
         logger.info(f"[Demo] Random host order: {labels}")
 
-        netlify_order = self.netlify_pool.shuffled()
-        if not netlify_order and self.netlify_pool.accounts:
-            logger.debug("[Demo] Netlify skipped — no account above credit minimum")
-
         for target in targets:
-            if target.kind == "hostinger" and target.site:
-                url = await self._try_hostinger_site(
-                    path, slug, demo_base_url, target.site
-                )
-            else:
-                url = await self._try_netlify_accounts(
-                    path, slug, demo_base_url, accounts=netlify_order
-                )
+            if target.kind != "hostinger" or not target.site:
+                continue
+            url = await self._try_hostinger_site(
+                path, slug, demo_base_url, target.site
+            )
             if url:
                 logger.info(f"[Demo] Published via {target.label}")
                 return url
@@ -190,10 +184,7 @@ class DemoPublisher:
     async def _publish_priority(
         self, path: Path, slug: str, demo_base_url: str | None
     ) -> str | None:
-        """Netlify → Hostinger → R2 (legacy order)."""
-        url = await self._try_netlify_pool(path, slug, demo_base_url)
-        if url:
-            return url
+        """Hostinger → Cloudflare R2."""
         url = await self._try_hostinger_pool(path, slug, demo_base_url)
         if url:
             return url
@@ -204,7 +195,7 @@ class DemoPublisher:
         if not base:
             return None
         mode = self._effective_mode()
-        if mode == "netlify":
+        if mode == "netlify" and self._netlify_allowed():
             acct = self.netlify_pool.pick(slug)
             if acct:
                 return self.netlify.public_url_for_slug(
@@ -233,7 +224,7 @@ class DemoPublisher:
         strategy = self.host_strategy
         logger.debug(f"[Demo] Publish mode={mode} strategy={strategy} slug={slug}")
 
-        if mode == "netlify":
+        if mode == "netlify" and self._netlify_allowed():
             return await self._try_netlify_pool(path, slug, demo_base_url)
         if mode == "ftp":
             return await self._try_hostinger_pool(path, slug, demo_base_url)

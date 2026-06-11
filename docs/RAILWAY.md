@@ -9,17 +9,37 @@ Use Railway so Razorpay and Instantly always reach your app — no Cloudflare tu
 3. Railway reads `railway.toml` → `python scripts/railway_start.py` (role from env).
 4. Port: Railway sets `PORT` automatically on the webhook service.
 
-### Two services, same repo (`railway.toml` locks the start command)
+### Three services, same repo (`railway.toml` locks the start command)
 
 | Service | Variable | What runs |
 |---------|----------|-----------|
 | **Service 1 (webhooks)** | *(none)* or `RAILWAY_SERVICE_ROLE=webhook` | Webhooks + `/health` |
 | **Service 2 (Telegram)** | `RAILWAY_SERVICE_ROLE=telegram` | `run_telegram_approvals.py` |
+| **Service 3 (Atlas)** | `RAILWAY_SERVICE_ROLE=agent` | `start_agent.py` (30-min loop) |
 
-You **cannot** edit the start command in the Railway UI while `railway.toml` sets it — use the variable above on Service 2 instead.
+You **cannot** edit the start command in the Railway UI while `railway.toml` sets it — use the variable above per service.
 
-**Service 1 only:** Settings → Deploy → Healthcheck Path = `/health`
-**Service 2:** leave healthcheck **off** (no HTTP server).
+**Service 1 only:** Settings → Deploy → Healthcheck Path = `/health`  
+**Services 2 & 3:** leave healthcheck **off** (no HTTP server).
+
+### Shared database (required for reply sync + approvals)
+
+Without this, each service has its own empty `agent.db` → `not in memory bank` on Instantly replies.
+
+**Recommended — Supabase Postgres (free, survives Railway outages):** see `docs/DATABASE.md`
+
+```bash
+DATABASE_URL=postgresql://postgres.xxxx:pass@aws-0-region.pooler.supabase.com:6543/postgres?sslmode=require
+```
+
+Set in **Shared Variables** on all 3 services. No volume needed.
+
+**Alternative — SQLite on Railway volume** (data tied to Railway):
+
+1. New Volume → attach to all 3 services at **`/app/data`**
+2. `DATABASE_URL=sqlite+aiosqlite:////app/data/agent.db`
+
+Redeploy all three services after changing DB config.
 
 ## 2. Environment variables
 
@@ -36,13 +56,7 @@ Copy from `.env` into Railway → Variables:
 | `INSTANTLY_CAMPAIGN_ID` | If using Instantly |
 | `INSTANTLY_WEBHOOK_SECRET` | Optional header check |
 | `SMTP_*` | For Approve → send (same as local) |
-| `DATABASE_URL` | Optional; default SQLite on volume — prefer Railway volume mount at `/data` |
-
-For SQLite persistence, add a **Volume** mounted at `F:\Agent-Earns` path in container as `/app/data` and set:
-
-```bash
-DATABASE_URL=sqlite+aiosqlite:////app/data/agent.db
-```
+| `DATABASE_URL` | **Yes on Railway** — `sqlite+aiosqlite:////app/data/agent.db` + volume at `/app/data` |
 
 ## 3. Public URL
 

@@ -24,7 +24,23 @@ from modules.outreach.reply_classifier import (
 )
 from utils.notifier import Notifier
 
-STATE_FILE = Path("data/instantly_reply_state.json")
+def _reply_state_file() -> Path:
+    """Persist reply dedupe next to agent.db when Railway volume is mounted."""
+    from database.connection import RAILWAY_DATA_DIR, get_database_url
+
+    if RAILWAY_DATA_DIR.is_dir():
+        return RAILWAY_DATA_DIR / "instantly_reply_state.json"
+    try:
+        from sqlalchemy.engine import make_url
+
+        parsed = make_url(get_database_url())
+        if parsed.drivername.startswith("sqlite") and parsed.database:
+            db_path = Path(parsed.database)
+            if db_path.parent.is_dir():
+                return db_path.parent / "instantly_reply_state.json"
+    except Exception:
+        pass
+    return Path("data/instantly_reply_state.json")
 UE_TYPE_RECEIVED = 2
 
 
@@ -68,24 +84,25 @@ class InstantlyReplySync:
         )
         self.repo = LeadRepository()
         self.notifier = Notifier(settings)
-        STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        _reply_state_file().parent.mkdir(parents=True, exist_ok=True)
 
     @property
     def is_configured(self) -> bool:
         return self.client.is_configured
 
     def _load_seen(self) -> set[str]:
-        if not STATE_FILE.is_file():
+        path = _reply_state_file()
+        if not path.is_file():
             return set()
         try:
-            data = json.loads(STATE_FILE.read_text(encoding="utf-8"))
+            data = json.loads(path.read_text(encoding="utf-8"))
             return set(data.get("seen_email_ids") or [])
         except Exception:
             return set()
 
     def _save_seen(self, seen: set[str], max_ids: int = 5000) -> None:
         ids = list(seen)[-max_ids:]
-        STATE_FILE.write_text(
+        _reply_state_file().write_text(
             json.dumps({"seen_email_ids": ids}, indent=0),
             encoding="utf-8",
         )

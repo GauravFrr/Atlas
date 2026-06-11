@@ -28,6 +28,14 @@ class Settings(BaseSettings):
     )
     dashboard_password: str = Field(default="change_me")
     dashboard_port: int = Field(default=8000)
+    database_url: str = Field(
+        default="",
+        description=(
+            "SQLAlchemy async URL. Postgres: postgresql://... (Neon/Supabase). "
+            "SQLite: sqlite+aiosqlite:////app/data/agent.db. "
+            "Empty = ./agent.db locally, or /app/data/agent.db when volume mounted."
+        ),
+    )
 
     # ══════════════════════════════════════════
     # LLM (required)
@@ -191,11 +199,15 @@ class Settings(BaseSettings):
         description="auto | netlify | r2 | ftp | local — where to publish demo HTML",
     )
     demo_host_strategy: str = Field(
-        default="random",
+        default="priority",
         description=(
-            "auto mode only: random = pick demos.gauravxd / demos.urmikexd / Netlify "
-            "per demo, then Cloudflare R2; priority = Netlify → Hostinger → R2"
+            "auto mode only: priority = Hostinger sites → Cloudflare R2; "
+            "random = shuffle Hostinger sites per demo, then R2"
         ),
+    )
+    demo_skip_netlify: bool = Field(
+        default=True,
+        description="If true, Netlify is never used (Hostinger + R2 only)",
     )
     netlify_auth_token: str = Field(
         default="",
@@ -234,7 +246,7 @@ class Settings(BaseSettings):
     )
     demo_prefer_r2: bool = Field(
         default=False,
-        description="If true, R2 runs before Netlify in auto mode (keep false: Netlify first)",
+        description="If true, R2 runs before Hostinger in auto mode",
     )
     hostinger_sites_file: str = Field(
         default="",

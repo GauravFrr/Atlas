@@ -143,23 +143,23 @@ class CampaignOrchestrator:
     async def _resolve_demo_url(
         self, demo_path: str | None, demo_base_url: str | None = None
     ) -> str | None:
-        """Upload to R2 when configured; public link may use rotated domain base URL."""
+        """Upload to Hostinger/R2; return None if upload fails (no fake URLs in emails)."""
         if not demo_path:
             return None
         base = demo_base_url or self.settings.demo_site_base_url
         if not base:
             return None
         slug = self._demo_slug(demo_path)
-        if self.settings.r2_auto_upload:
-            uploaded = await self.demo_publisher.publish(
-                demo_path, slug=slug, demo_base_url=base
-            )
-            if uploaded:
-                return uploaded
-            logger.warning(
-                "[Demo] Upload failed — email may omit link or use base URL if file was uploaded manually"
-            )
-        return self._demo_public_url(demo_path, demo_base_url=base)
+        mode = (getattr(self.settings, "demo_upload_mode", "auto") or "auto").lower()
+        if mode == "local":
+            return self._demo_public_url(demo_path, demo_base_url=base)
+        uploaded = await self.demo_publisher.publish(
+            demo_path, slug=slug, demo_base_url=base
+        )
+        if uploaded:
+            return uploaded
+        logger.warning("[Demo] Upload failed — email will omit demo link")
+        return None
 
     async def _fetch_leads(
         self,

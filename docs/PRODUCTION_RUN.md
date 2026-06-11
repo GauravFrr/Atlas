@@ -47,9 +47,14 @@ python start_agent.py
 - Start: `python scripts/run_telegram_approvals.py`
 - Same env as local (`TELEGRAM_*`, `SMTP_*`, `INSTANTLY_*`, DB path)
 
-### Service 3 — Atlas (optional)
+### Service 3 — Atlas
+- Variable: `RAILWAY_SERVICE_ROLE=agent`
 - Start: `python start_agent.py`
-- Mount volume for `agent.db` if using SQLite
+
+### Shared SQLite volume (all 3 services)
+- Mount **`/app/data`** on webhooks + Telegram + Atlas
+- `DATABASE_URL=sqlite+aiosqlite:////app/data/agent.db` in **Shared Variables**
+- Without this, reply sync shows `not in memory bank` (split DB per container)
 
 ---
 

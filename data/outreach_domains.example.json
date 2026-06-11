@@ -1,7 +1,7 @@
 [
   {
     "name": "gauravxd-dev",
-    "demo_base_url": "https://clientdemosites.netlify.app",
+    "demo_base_url": "https://demos.gauravxd.dev",
     "smtp_host": "smtp.hostinger.com",
     "smtp_port": 587,
     "smtp_user": "gauravdev@gauravxd.dev",
@@ -12,7 +12,7 @@
   },
   {
     "name": "gauravxd-gaurav",
-    "demo_base_url": "https://clientdemosites.netlify.app",
+    "demo_base_url": "https://demos.gauravxd.dev",
     "smtp_host": "smtp.hostinger.com",
     "smtp_port": 587,
     "smtp_user": "gaurav@gauravxd.dev",
@@ -23,7 +23,7 @@
   },
   {
     "name": "urmikexd-mike",
-    "demo_base_url": "https://clientdemosites.netlify.app",
+    "demo_base_url": "https://demos.gauravxd.dev",
     "smtp_host": "smtp.hostinger.com",
     "smtp_port": 587,
     "smtp_user": "mike@urmikexd.me",
@@ -34,7 +34,7 @@
   },
   {
     "name": "urmikexd-dev",
-    "demo_base_url": "https://clientdemosites.netlify.app",
+    "demo_base_url": "https://demos.gauravxd.dev",
     "smtp_host": "smtp.hostinger.com",
     "smtp_port": 587,
     "smtp_user": "gauravdev@urmikexd.me",

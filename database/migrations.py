@@ -18,8 +18,17 @@ COLUMN_MIGRATIONS: list[tuple[str, str, str]] = [
 ]
 
 
+def _column_exists_err(err: str) -> bool:
+    e = err.lower()
+    return (
+        "duplicate column" in e
+        or "already exists" in e
+        or "duplicate column name" in e
+    )
+
+
 async def run_migrations(engine: AsyncEngine) -> None:
-    """Apply additive column migrations for existing SQLite databases."""
+    """Apply additive column migrations for existing SQLite / Postgres databases."""
     async with engine.connect() as conn:
         for table, column, sql_type in COLUMN_MIGRATIONS:
             try:
@@ -30,9 +39,9 @@ async def run_migrations(engine: AsyncEngine) -> None:
                 logger.info(f"Migration: added {table}.{column}")
             except Exception as e:
                 err = str(e).lower()
-                if "duplicate column" in err or "already exists" in err:
+                if _column_exists_err(err):
                     continue
-                if "no such table" in err:
+                if "no such table" in err or "does not exist" in err:
                     continue
                 logger.warning(f"Migration skipped {table}.{column}: {e}")
 

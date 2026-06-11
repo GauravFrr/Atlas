@@ -1,77 +1,56 @@
 # Demo hosting stack
 
-**Your setup (default `auto` + `DEMO_HOST_STRATEGY=random`):**
+**Default (`DEMO_UPLOAD_MODE=auto`, `DEMO_SKIP_NETLIFY=true`):**
 
-Each demo randomly picks one host:
+1. **Hostinger FTP** — `data/hostinger_sites.json` (`demos.gauravxd.dev`, `demos.urmikexd.me`)
+2. **Cloudflare R2** — if FTP fails and R2 credentials are set
 
-- `https://demos.gauravxd.dev/{slug}/`
-- `https://demos.urmikexd.me/{slug}/`
-- **Netlify** (pool in `.env` + `data/netlify_accounts.json`)
+Netlify is **off** unless you set `DEMO_SKIP_NETLIFY=false` and `DEMO_UPLOAD_MODE=netlify`.
 
-If that host fails, the others are tried in the same shuffled order, then **Cloudflare R2** last (`DEMO_PREFER_R2=false`).
-
-Old fixed order: `DEMO_HOST_STRATEGY=priority` (Netlify → Hostinger → R2).
-
-## Recommended at 70%+ Netlify usage
-
-### Option A — Cloudflare R2 (best for volume)
-
-1. Create a free Cloudflare account → R2 bucket → enable public access or custom domain.
-2. In `.env`:
+## `.env` (recommended)
 
 ```env
 DEMO_UPLOAD_MODE=auto
-DEMO_PREFER_R2=true
-DEMO_SITE_BASE_URL=https://demos.gauravxd.dev
+DEMO_SITE_BASE_URL=https://demos.urmikexd.me
+DEMO_HOST_STRATEGY=priority
+DEMO_SKIP_NETLIFY=true
+DEMO_PREFER_R2=false
+
+FTP_PASSWORD=your_ftp_password
+HOSTINGER_SITES_FILE=data/hostinger_sites.json
+```
+
+Match mailbox demo URLs in `data/outreach_domains.json` (gauravxd mailboxes → `demos.gauravxd.dev`, urmikexd → `demos.urmikexd.me`).
+
+## Cloudflare R2 fallback
+
+```env
 R2_ACCOUNT_ID=your_account_id
 R2_ACCESS_KEY_ID=...
 R2_SECRET_ACCESS_KEY=...
 R2_BUCKET_NAME=agent-demos
+R2_ENDPOINT_URL=https://<account_id>.r2.cloudflarestorage.com
 ```
 
 See `docs/GAURAVXD_R2_DOMAIN.md` for custom domain setup.
-
-Demos upload to R2; Netlify is skipped unless R2 fails.
-
-### Option B — Hostinger FTP (you already pay for hosting)
-
-```env
-DEMO_UPLOAD_MODE=ftp
-DEMO_SITE_BASE_URL=https://gauravxd.dev/demos
-FTP_HOST=ftp.hostinger.com
-FTP_USER=...
-FTP_PASSWORD=...
-FTP_REMOTE_BASE=public_html/demos
-```
-
-Unlimited demos on your own disk — no Netlify bandwidth.
-
-### Option C — Extra Netlify sites you own (manual)
-
-If you create a **second real Netlify account** (your own email, verified normally):
-
-1. Create a new site → Site settings → copy **Site ID** and create a **Personal access token**.
-2. Copy `data/netlify_accounts.example.json` → `data/netlify_accounts.json`.
-3. Add the backup site (primary stays in `.env`).
-
-```env
-NETLIFY_ACCOUNTS_FILE=data/netlify_accounts.json
-```
-
-The agent rotates deploys across accounts and falls back to R2/FTP if deploy fails (e.g. credits exhausted).
 
 ## Modes
 
 | `DEMO_UPLOAD_MODE` | Behavior |
 |--------------------|----------|
-| `auto` | Netlify pool → R2 → FTP (or R2 first if `DEMO_PREFER_R2=true`) |
-| `netlify` | Netlify pool only |
+| `auto` | Hostinger pool → R2 (or R2 first if `DEMO_PREFER_R2=true`) |
+| `ftp` | Hostinger only |
 | `r2` | R2 only |
-| `ftp` | FTP only |
+| `netlify` | Netlify only (requires `DEMO_SKIP_NETLIFY=false`) |
 | `local` | No upload; URL from `DEMO_SITE_BASE_URL` only |
 
-## Why not temp-mail automation?
+| `DEMO_HOST_STRATEGY` | Behavior (auto mode) |
+|----------------------|-------------------------|
+| `priority` | Try each Hostinger site in order, then R2 |
+| `random` | Shuffle Hostinger sites per demo, then R2 |
 
-- Against Netlify ToS and often illegal (fraudulent account creation).
-- Accounts get deleted; tokens stop working mid-campaign.
-- R2/FTP are cheaper, stable, and already built into this repo.
+## Failed uploads
+
+If upload fails, the outreach email **omits** the demo link (no fake URLs).
+
+Test FTP: `python scripts/test_ftp_demo.py`

@@ -86,13 +86,6 @@ class ColdEmailEngine:
             f"tier={plan.tier.value} — {plan.service_label}"
         )
 
-        if not demo_url and lead.demo_site_path and getattr(
-            self.settings, "demo_site_base_url", None
-        ):
-            base = str(self.settings.demo_site_base_url).rstrip("/")
-            slug = Path(lead.demo_site_path).stem
-            demo_url = f"{base}/{slug}/index.html"
-
         sender = your_name.strip() or "Gaurav"
         from modules.outreach.icebreaker import preset_icebreaker
 
