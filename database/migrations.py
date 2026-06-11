@@ -38,6 +38,7 @@ async def run_migrations(engine: AsyncEngine) -> None:
                 await conn.commit()
                 logger.info(f"Migration: added {table}.{column}")
             except Exception as e:
+                await conn.rollback()
                 err = str(e).lower()
                 if _column_exists_err(err):
                     continue
@@ -55,4 +56,5 @@ async def run_migrations(engine: AsyncEngine) -> None:
             )
             await conn.commit()
         except Exception as e:
+            await conn.rollback()
             logger.debug(f"place_id index migration: {e}")

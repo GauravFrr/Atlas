@@ -57,7 +57,10 @@ def normalize_database_url(url: str) -> str:
     try:
         parsed = make_url(u)
         if parsed.drivername.startswith("postgresql"):
-            u = str(parsed.difference_update_query(list(_ASYNCPG_STRIP_QUERY)))
+            # render_as_string — str(url) masks password as "***" and breaks auth
+            u = parsed.difference_update_query(list(_ASYNCPG_STRIP_QUERY)).render_as_string(
+                hide_password=False
+            )
     except Exception:
         import re
 
