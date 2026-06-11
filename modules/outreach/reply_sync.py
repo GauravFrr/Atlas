@@ -24,8 +24,8 @@ from modules.outreach.reply_classifier import (
 )
 from utils.notifier import Notifier
 
-def _reply_state_file() -> Path:
-    """Persist reply dedupe next to agent.db when Railway volume is mounted."""
+def reply_state_file() -> Path:
+    """Persist reply dedupe next to agent.db (or data/ for Postgres-only deploys)."""
     from database.connection import RAILWAY_DATA_DIR, get_database_url
 
     if RAILWAY_DATA_DIR.is_dir():
@@ -84,14 +84,14 @@ class InstantlyReplySync:
         )
         self.repo = LeadRepository()
         self.notifier = Notifier(settings)
-        _reply_state_file().parent.mkdir(parents=True, exist_ok=True)
+        reply_state_file().parent.mkdir(parents=True, exist_ok=True)
 
     @property
     def is_configured(self) -> bool:
         return self.client.is_configured
 
     def _load_seen(self) -> set[str]:
-        path = _reply_state_file()
+        path = reply_state_file()
         if not path.is_file():
             return set()
         try:
@@ -102,7 +102,7 @@ class InstantlyReplySync:
 
     def _save_seen(self, seen: set[str], max_ids: int = 5000) -> None:
         ids = list(seen)[-max_ids:]
-        _reply_state_file().write_text(
+        reply_state_file().write_text(
             json.dumps({"seen_email_ids": ids}, indent=0),
             encoding="utf-8",
         )

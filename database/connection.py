@@ -38,12 +38,20 @@ def _sqlite_file_url(path: Path) -> str:
 def normalize_database_url(url: str) -> str:
     """
     Neon/Supabase/Railway often provide postgresql:// — SQLAlchemy async needs asyncpg.
+    Strips ?pgbouncer=true (Prisma hint) — asyncpg rejects it as a connect() kwarg.
     """
-    u = url.strip()
+    u = url.strip().strip('"').strip("'")
     if u.startswith("postgres://"):
-        return "postgresql+asyncpg://" + u[len("postgres://") :]
-    if u.startswith("postgresql://") and "+asyncpg" not in u:
-        return "postgresql+asyncpg://" + u[len("postgresql://") :]
+        u = "postgresql+asyncpg://" + u[len("postgres://") :]
+    elif u.startswith("postgresql://") and "+asyncpg" not in u:
+        u = "postgresql+asyncpg://" + u[len("postgresql://") :]
+    try:
+        parsed = make_url(u)
+        if parsed.drivername.startswith("postgresql"):
+            q = {k: v for k, v in dict(parsed.query).items() if k.lower() != "pgbouncer"}
+            u = str(parsed.set(query=q))
+    except Exception:
+        pass
     return u
 
 

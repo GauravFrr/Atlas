@@ -27,7 +27,7 @@ from config import get_settings
 from database.connection import get_session_factory, init_db
 from database.repositories.lead_repository import LeadRepository
 from modules.outreach.reply_classifier import classify_reply_async
-from modules.outreach.reply_sync import STATE_FILE
+from modules.outreach.reply_sync import reply_state_file
 from utils.notifier import Notifier
 
 app = FastAPI(title="Agent-Earns Webhooks")
@@ -184,17 +184,18 @@ async def _process_reply_event(payload: dict[str, Any], event: str) -> None:
         if eid:
             import json
 
-            STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+            state_path = reply_state_file()
+            state_path.parent.mkdir(parents=True, exist_ok=True)
             seen: set[str] = set()
-            if STATE_FILE.is_file():
+            if state_path.is_file():
                 try:
                     seen = set(
-                        json.loads(STATE_FILE.read_text()).get("seen_email_ids") or []
+                        json.loads(state_path.read_text()).get("seen_email_ids") or []
                     )
                 except Exception:
                     pass
             seen.add(eid)
-            STATE_FILE.write_text(
+            state_path.write_text(
                 json.dumps({"seen_email_ids": list(seen)[-5000:]}),
                 encoding="utf-8",
             )
