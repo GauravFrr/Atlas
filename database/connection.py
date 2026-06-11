@@ -48,10 +48,12 @@ def normalize_database_url(url: str) -> str:
     try:
         parsed = make_url(u)
         if parsed.drivername.startswith("postgresql"):
-            q = {k: v for k, v in dict(parsed.query).items() if k.lower() != "pgbouncer"}
-            u = str(parsed.set(query=q))
+            u = str(parsed.difference_update_query(["pgbouncer"]))
     except Exception:
-        pass
+        import re
+
+        u = re.sub(r"([?&])pgbouncer=[^&]*&?", r"\1", u, flags=re.I)
+        u = re.sub(r"\?&", "?", u).rstrip("?&")
     return u
 
 
