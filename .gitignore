@@ -7,7 +7,6 @@ KEYS.txt
 $PROFILE.txt
 .claude/
 data/netlify_accounts.json
-data/hostinger_sites.json
 
 # Python
 __pycache__/

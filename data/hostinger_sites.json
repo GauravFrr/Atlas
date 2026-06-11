@@ -1,0 +1,16 @@
+[
+  {
+    "name": "demos-gauravxd",
+    "demo_base_url": "https://demos.gauravxd.dev",
+    "ftp_host": "82.112.232.143",
+    "ftp_user": "u709319479.demos.gauravxd.dev",
+    "ftp_remote_base": ""
+  },
+  {
+    "name": "demos-urmikexd",
+    "demo_base_url": "https://demos.urmikexd.me",
+    "ftp_host": "82.112.232.143",
+    "ftp_user": "u709319479.demos.urmikexd.me",
+    "ftp_remote_base": ""
+  }
+]
