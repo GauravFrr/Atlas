@@ -57,7 +57,7 @@ def main_menu_keyboard() -> InlineKeyboardMarkup:
                 InlineKeyboardButton("⚙️ Stack", callback_data="atlas:stack"),
                 InlineKeyboardButton("ℹ️ Help", callback_data="atlas:help"),
             ],
-            [[InlineKeyboardButton("🏠 Menu", callback_data="atlas:menu")]],
+            [InlineKeyboardButton("🏠 Menu", callback_data="atlas:menu")],
         ]
     )
 
