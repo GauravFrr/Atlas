@@ -50,13 +50,14 @@ def main_menu_keyboard() -> InlineKeyboardMarkup:
                 InlineKeyboardButton("📦 Delivery", callback_data="atlas:delivery"),
             ],
             [
-                InlineKeyboardButton("🔄 Sync Instantly", callback_data="atlas:sync"),
-                InlineKeyboardButton("⚙️ Stack", callback_data="atlas:stack"),
+                InlineKeyboardButton("📤 Export", callback_data="atlas:export"),
+                InlineKeyboardButton("🔄 Sync", callback_data="atlas:sync"),
             ],
             [
+                InlineKeyboardButton("⚙️ Stack", callback_data="atlas:stack"),
                 InlineKeyboardButton("ℹ️ Help", callback_data="atlas:help"),
-                InlineKeyboardButton("🏠 Menu", callback_data="atlas:menu"),
             ],
+            [[InlineKeyboardButton("🏠 Menu", callback_data="atlas:menu")]],
         ]
     )
 
@@ -113,7 +114,7 @@ def welcome_text(settings: Settings) -> str:
             "Cold outreach · approvals · payments · delivery",
             "",
             "Use the buttons below or commands:",
-            "/menu · /status · /health · /leads · /help",
+            "/menu · /status · /export · /leads · /help",
             "",
             "<i>Only you can use this bot.</i>",
         ]
@@ -134,6 +135,13 @@ def help_text(settings: Settings) -> str:
             "/payments — Pending Razorpay links",
             "/delivery — Paid, not delivered",
             "/stack — What's configured in .env",
+            "",
+            "<b>Lead export (CSV file in chat)</b>",
+            "/export — Inventory counts by tier",
+            "/export help — Filters & examples",
+            "/export enriched — Tier CSV",
+            "/export standard country=IN city=Mumbai",
+            "/export exclusive unsold fresh limit=100",
             "",
             "<b>Approvals</b>",
             "Reply & payment emails arrive here with",

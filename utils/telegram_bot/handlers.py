@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import io
+
 from telegram import BotCommand, Update
 from telegram.error import BadRequest
 from telegram.ext import (
@@ -138,6 +140,93 @@ async def cmd_stack(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await _reply_html(update, text, keyboard=back_menu_keyboard())
 
 
+async def cmd_export(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    settings = _settings(context)
+    if await reject_non_owner(update, settings):
+        return
+
+    from database.connection import get_session_factory
+    from database.repositories.lead_repository import LeadRepository
+    from utils.lead_export import (
+        export_help_text,
+        inventory_summary_text,
+        parse_export_args,
+        run_export,
+    )
+
+    tokens = list(context.args or [])
+    if not tokens:
+        repo = LeadRepository()
+        factory = get_session_factory()
+        async with factory() as session:
+            counts = await repo.count_by_package_tier(session)
+        await _reply_html(
+            update,
+            inventory_summary_text(counts),
+            keyboard=back_menu_keyboard(),
+        )
+        return
+
+    if tokens[0].lower() in ("help", "?", "inventory"):
+        if tokens[0].lower() == "inventory":
+            repo = LeadRepository()
+            factory = get_session_factory()
+            async with factory() as session:
+                counts = await repo.count_by_package_tier(session)
+            await _reply_html(
+                update,
+                inventory_summary_text(counts),
+                keyboard=back_menu_keyboard(),
+            )
+            return
+        await _reply_html(
+            update, export_help_text(), keyboard=back_menu_keyboard()
+        )
+        return
+
+    parsed = parse_export_args(tokens)
+    if parsed == "help":
+        await _reply_html(
+            update, export_help_text(), keyboard=back_menu_keyboard()
+        )
+        return
+    if isinstance(parsed, str):
+        await update.effective_message.reply_text(parsed)
+        return
+
+    await update.effective_message.reply_text(
+        f"Building export… ({', '.join(parsed.label_parts())})"
+    )
+
+    repo = LeadRepository()
+    factory = get_session_factory()
+    async with factory() as session:
+        result = await run_export(session, repo, parsed)
+
+    if not result.files:
+        await _reply_html(
+            update,
+            "No leads match those filters. Try <code>/export help</code>.",
+            keyboard=back_menu_keyboard(),
+        )
+        return
+
+    for ef in result.files:
+        bio = io.BytesIO(ef.content)
+        bio.name = ef.filename
+        tier_note = f" · {ef.tier}" if ef.tier else ""
+        caption = (
+            f"📤 {ef.row_count} leads{tier_note}\n"
+            f"Filters: {', '.join(parsed.label_parts())}"
+        )
+        if parsed.mark_sold:
+            caption += f"\n✅ Marked sold{f' → {parsed.buyer}' if parsed.buyer else ''}"
+        await update.effective_message.reply_document(
+            document=bio,
+            caption=caption,
+        )
+
+
 async def _on_atlas_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
     if not query or not query.data:
@@ -188,6 +277,26 @@ async def _on_atlas_callback(update: Update, context: ContextTypes.DEFAULT_TYPE)
     elif action == "stack":
         text = await panel.fetch_stack(settings)
         await _reply_html(update, text, keyboard=back_menu_keyboard(), edit=True)
+    elif action == "export":
+        from database.connection import get_session_factory
+        from database.repositories.lead_repository import LeadRepository
+        from utils.lead_export import export_help_text, inventory_summary_text
+
+        if arg == "help":
+            await _reply_html(
+                update, export_help_text(), keyboard=back_menu_keyboard(), edit=True
+            )
+            return
+        repo = LeadRepository()
+        factory = get_session_factory()
+        async with factory() as session:
+            counts = await repo.count_by_package_tier(session)
+        await _reply_html(
+            update,
+            inventory_summary_text(counts),
+            keyboard=back_menu_keyboard(),
+            edit=True,
+        )
     elif action == "sync":
         await query.edit_message_text("🔄 Syncing Instantly inbox…")
         text = await panel.run_instantly_sync(settings)
@@ -317,6 +426,7 @@ def register_handlers(app: Application) -> None:
     app.add_handler(CommandHandler("payments", cmd_payments))
     app.add_handler(CommandHandler("delivery", cmd_delivery))
     app.add_handler(CommandHandler("stack", cmd_stack))
+    app.add_handler(CommandHandler("export", cmd_export))
     app.add_handler(CallbackQueryHandler(_on_atlas_callback, pattern=r"^atlas:"))
 
 
@@ -333,6 +443,7 @@ async def _post_init(app: Application) -> None:
         BotCommand("payments", "Pending payment links"),
         BotCommand("delivery", "Delivery queue"),
         BotCommand("stack", "Env configuration"),
+        BotCommand("export", "Export lead CSV (tier/geo filters)"),
         BotCommand("help", "All commands"),
     ]
     await app.bot.set_my_commands(commands)

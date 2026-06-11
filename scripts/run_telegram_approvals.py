@@ -8,7 +8,7 @@ Requires in .env:
   TELEGRAM_CHAT_ID
   SMTP_* (for Approve and send)
 
-Commands: /start /menu /status /health /leads /help
+Commands: /start /menu /status /health /leads /export /help
 """
 
 from __future__ import annotations
