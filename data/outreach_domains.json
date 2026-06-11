@@ -1,0 +1,46 @@
+[
+  {
+    "name": "gauravxd-dev",
+    "demo_base_url": "https://demos.gauravxd.dev",
+    "smtp_host": "smtp.hostinger.com",
+    "smtp_port": 587,
+    "smtp_user": "gauravdev@gauravxd.dev",
+    "smtp_password": "",
+    "smtp_from_email": "gauravdev@gauravxd.dev",
+    "smtp_from_name": "Gaurav",
+    "instantly_campaign_id": ""
+  },
+  {
+    "name": "gauravxd-gaurav",
+    "demo_base_url": "https://demos.gauravxd.dev",
+    "smtp_host": "smtp.hostinger.com",
+    "smtp_port": 587,
+    "smtp_user": "gaurav@gauravxd.dev",
+    "smtp_password": "",
+    "smtp_from_email": "gaurav@gauravxd.dev",
+    "smtp_from_name": "Gaurav",
+    "instantly_campaign_id": ""
+  },
+  {
+    "name": "urmikexd-mike",
+    "demo_base_url": "https://demos.urmikexd.me",
+    "smtp_host": "smtp.hostinger.com",
+    "smtp_port": 587,
+    "smtp_user": "mike@urmikexd.me",
+    "smtp_password": "",
+    "smtp_from_email": "mike@urmikexd.me",
+    "smtp_from_name": "Mike",
+    "instantly_campaign_id": ""
+  },
+  {
+    "name": "urmikexd-dev",
+    "demo_base_url": "https://demos.urmikexd.me",
+    "smtp_host": "smtp.hostinger.com",
+    "smtp_port": 587,
+    "smtp_user": "gauravdev@urmikexd.me",
+    "smtp_password": "",
+    "smtp_from_email": "gauravdev@urmikexd.me",
+    "smtp_from_name": "Gaurav",
+    "instantly_campaign_id": ""
+  }
+]

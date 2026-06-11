@@ -6,7 +6,6 @@
 KEYS.txt
 $PROFILE.txt
 .claude/
-data/outreach_domains.json
 data/netlify_accounts.json
 data/hostinger_sites.json
 
