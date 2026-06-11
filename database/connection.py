@@ -28,6 +28,8 @@ _resolved_database_url: str | None = None
 
 DEFAULT_SQLITE = "sqlite+aiosqlite:///agent.db"
 RAILWAY_DATA_DIR = Path("/app/data")
+# URL query keys libpq uses but asyncpg.connect() rejects when SQLAlchemy forwards them
+_ASYNCPG_STRIP_QUERY = ("pgbouncer", "sslmode", "ssl")
 
 
 def _sqlite_file_url(path: Path) -> str:
@@ -35,10 +37,17 @@ def _sqlite_file_url(path: Path) -> str:
     return f"sqlite+aiosqlite:///{p}"
 
 
+def _sslmode_from_url(url: str) -> str:
+    try:
+        return str(dict(make_url(url).query).get("sslmode") or "").lower()
+    except Exception:
+        return ""
+
+
 def normalize_database_url(url: str) -> str:
     """
     Neon/Supabase/Railway often provide postgresql:// — SQLAlchemy async needs asyncpg.
-    Strips ?pgbouncer=true (Prisma hint) — asyncpg rejects it as a connect() kwarg.
+    Strips query params asyncpg rejects (pgbouncer, sslmode) — SSL set in connect_args.
     """
     u = url.strip().strip('"').strip("'")
     if u.startswith("postgres://"):
@@ -48,11 +57,12 @@ def normalize_database_url(url: str) -> str:
     try:
         parsed = make_url(u)
         if parsed.drivername.startswith("postgresql"):
-            u = str(parsed.difference_update_query(["pgbouncer"]))
+            u = str(parsed.difference_update_query(list(_ASYNCPG_STRIP_QUERY)))
     except Exception:
         import re
 
-        u = re.sub(r"([?&])pgbouncer=[^&]*&?", r"\1", u, flags=re.I)
+        for key in _ASYNCPG_STRIP_QUERY:
+            u = re.sub(rf"([?&]){key}=[^&]*&?", r"\1", u, flags=re.I)
         u = re.sub(r"\?&", "?", u).rstrip("?&")
     return u
 
@@ -140,18 +150,36 @@ def _uses_supabase_pooler(url: str) -> bool:
 
 
 def _postgres_engine_kwargs(database_url: str) -> dict:
+    raw = (os.environ.get("DATABASE_URL") or "").strip()
+    sslmode = _sslmode_from_url(raw) if raw else ""
     kwargs: dict = {"echo": False, "pool_pre_ping": True}
+    connect_args: dict = {}
+
     if _uses_supabase_pooler(database_url):
         # Supavisor/pgbouncer transaction mode — see docs/DATABASE.md
         kwargs["poolclass"] = NullPool
-        kwargs["connect_args"] = {
-            "statement_cache_size": 0,
-            "prepared_statement_cache_size": 0,
-            "prepared_statement_name_func": lambda: f"__asyncpg_{uuid.uuid4()}__",
-        }
+        connect_args.update(
+            {
+                "statement_cache_size": 0,
+                "prepared_statement_cache_size": 0,
+                "prepared_statement_name_func": lambda: f"__asyncpg_{uuid.uuid4()}__",
+            }
+        )
     else:
         kwargs["pool_size"] = 5
         kwargs["max_overflow"] = 10
+
+    if sslmode == "disable":
+        pass
+    elif sslmode in ("require", "verify-ca", "verify-full", "prefer") or (
+        "supabase" in database_url.lower()
+        or "neon" in database_url.lower()
+        or _uses_supabase_pooler(database_url)
+    ):
+        connect_args["ssl"] = "require"
+
+    if connect_args:
+        kwargs["connect_args"] = connect_args
     return kwargs
 
 
