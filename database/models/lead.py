@@ -45,6 +45,10 @@ class Lead(Base, UUIDMixin, TimestampMixin, SoftDeleteMixin):
     last_contacted: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     next_followup: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
     sequence_step: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    # Resale package: basic | standard | enriched | exclusive (null = no email yet)
+    package_tier: Mapped[Optional[str]] = mapped_column(
+        String(20), nullable=True, index=True
+    )
 
     def __repr__(self) -> str:
         return f"<Lead id={self.id[:8]} name={self.business_name} score={self.score} status={self.status}>"

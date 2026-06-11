@@ -1,6 +1,5 @@
 """
-Remove stale leads that have demos/drafts but no email (pre email-first gate).
-Soft-deletes rows and deletes local demo HTML files.
+Clear demos/drafts on leads with no email; keep rows in DB for resale inventory.
 """
 from __future__ import annotations
 
@@ -44,7 +43,7 @@ async def main() -> None:
             await repo.discard_no_email(session, lead, reason="no_email_cleanup")
             n += 1
         await session.commit()
-    print(f"Discarded {n} lead(s) with no email (demos removed).")
+    print(f"Cleaned {n} lead(s) with no email (demos removed, rows kept).")
 
 
 if __name__ == "__main__":

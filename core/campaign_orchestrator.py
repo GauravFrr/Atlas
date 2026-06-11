@@ -434,9 +434,14 @@ class CampaignOrchestrator:
         campaign_run_id: str,
         outcome: CampaignResult,
     ) -> list[MapsScanResult]:
-        """Drop leads already in memory bank; record skips in DB."""
+        """Save every hunted lead; return only new ones for outreach processing."""
         raw_leads = self._dedupe_raw_leads(raw_leads)
         new_leads: list[MapsScanResult] = []
+
+        for maps_lead in raw_leads:
+            await self.lead_repo.upsert_inventory_from_maps(
+                session, maps_lead, campaign_run_id
+            )
 
         for maps_lead in raw_leads:
             if len(new_leads) >= target:
@@ -533,7 +538,7 @@ class CampaignOrchestrator:
         db_lead: Any | None = None,
         reason: str = "no_email",
     ) -> None:
-        """Remove lead from pipeline — no LLM demos/drafts without email."""
+        """Skip outreach without email — lead stays in DB for resale inventory."""
         remove_local_demo(db_lead.demo_site_path if db_lead else maps_lead.demo_site_path)
         if db_lead:
             await self.lead_repo.discard_no_email(session, db_lead, reason=reason)
@@ -542,7 +547,7 @@ class CampaignOrchestrator:
                 session, maps_lead, campaign_run_id, reason
             )
         logger.info(
-            f"[Email gate] Discarded {maps_lead.business_name} — no contact email"
+            f"[Email gate] Saved inventory only (no email): {maps_lead.business_name}"
         )
 
     async def _ensure_email_or_discard(
@@ -560,8 +565,13 @@ class CampaignOrchestrator:
         await ensure_contact_name(maps_lead, self.settings)
 
         if maps_has_email(maps_lead):
-            if db_lead and not db_lead.email:
-                db_lead.email = maps_lead.email
+            if db_lead:
+                from utils.lead_package_tier import sync_maps_enrichment
+
+                if not db_lead.email:
+                    db_lead.email = maps_lead.email
+                sync_maps_enrichment(db_lead, maps_lead)
+                await self.lead_repo.refresh_package_tier(session, db_lead)
             return True
 
         await self._discard_no_email(
@@ -961,17 +971,29 @@ class CampaignOrchestrator:
         )
 
         try:
+            db_lead = await self.lead_repo.upsert_inventory_from_maps(
+                session, maps_lead, campaign_run_id, for_outreach=True
+            )
+
             # Email-first — no demo/draft until contact email exists
             if not await self._ensure_email_or_discard(
-                session, maps_lead, campaign_run_id
+                session, maps_lead, campaign_run_id, db_lead=db_lead
             ):
-                result.status = "discarded_no_email"
+                result.status = "saved_no_email"
                 return result
 
-            db_lead = await self.lead_repo.create_from_maps(
-                session, maps_lead, campaign_run_id
-            )
             result.email = maps_lead.email
+
+            from modules.outreach.website_pitch import (
+                cache_pitch_on_lead,
+                ensure_website_audit,
+            )
+            from utils.lead_package_tier import sync_maps_enrichment
+
+            await ensure_website_audit(maps_lead, self.settings)
+            cache_pitch_on_lead(maps_lead)
+            sync_maps_enrichment(db_lead, maps_lead)
+            await self.lead_repo.refresh_package_tier(session, db_lead)
 
             outreach_domain = self._domain_for_lead(db_lead, maps_lead.place_id)
             if outreach_domain:

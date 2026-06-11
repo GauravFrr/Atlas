@@ -15,6 +15,7 @@ COLUMN_MIGRATIONS: list[tuple[str, str, str]] = [
     ("leads", "demo_site_path", "VARCHAR(500)"),
     ("leads", "pitch_subject", "VARCHAR(500)"),
     ("leads", "pitch_body", "TEXT"),
+    ("leads", "package_tier", "VARCHAR(20)"),
 ]
 
 

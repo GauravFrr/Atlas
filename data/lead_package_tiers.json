@@ -1,0 +1,48 @@
+{
+  "_note": "Resale packages for exported leads (INR per lead). Separate from Razorpay service pricing.",
+  "currency": "INR",
+  "exclusive_max_age_days": 7,
+  "tiers": {
+    "basic": {
+      "label": "Basic",
+      "description": "Verified email + business name",
+      "price_inr": 75,
+      "min_order": 50
+    },
+    "standard": {
+      "label": "Standard",
+      "description": "Email + business + niche + city + website status",
+      "price_inr": 100,
+      "min_order": 50
+    },
+    "enriched": {
+      "label": "Enriched",
+      "description": "Standard + audit / pitch tier / YouTube or hunt enrichment",
+      "price_inr": 150,
+      "min_order": 50
+    },
+    "exclusive": {
+      "label": "Exclusive fresh",
+      "description": "Enriched + hunted within 7 days + not sold to another buyer yet",
+      "price_inr": 220,
+      "min_order": 25
+    }
+  },
+  "bundles": {
+    "standard_100": {
+      "tier": "standard",
+      "count": 100,
+      "price_inr": 7500
+    },
+    "enriched_100": {
+      "tier": "enriched",
+      "count": 100,
+      "price_inr": 12500
+    },
+    "exclusive_50": {
+      "tier": "exclusive",
+      "count": 50,
+      "price_inr": 9500
+    }
+  }
+}
