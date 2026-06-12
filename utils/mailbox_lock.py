@@ -52,7 +52,9 @@ def extract_instantly_our_mailbox(payload: dict[str, Any]) -> str:
         return ""
 
     for key in (
+        "eaccount",
         "to_address_email",
+        "to_address_email_list",
         "to_email",
         "account_email",
         "sending_account_email",
@@ -60,6 +62,13 @@ def extract_instantly_our_mailbox(payload: dict[str, Any]) -> str:
         "from_email_account",
     ):
         found = _pick(payload.get(key))
+        if found:
+            return found
+
+    # Outbound campaign email — our address is From
+    ue = payload.get("ue_type")
+    if ue in (1, "1", "sent"):
+        found = _pick(payload.get("from_address_email"))
         if found:
             return found
 

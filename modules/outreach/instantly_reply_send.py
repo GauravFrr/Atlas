@@ -63,22 +63,35 @@ async def resolve_instantly_reply_context(
     eaccount = get_locked_mailbox(lead)
     lead_email = str(getattr(lead, "email", "") or "").strip().lower()
 
-    items: list[dict[str, Any]] = []
-    if lead_email and (not reply_id or not eaccount):
-        items, _ = await ic.list_emails(
+    thread_row: dict[str, Any] | None = None
+    if lead_email and not reply_id:
+        received, _ = await ic.list_emails(
             campaign_id=settings.instantly_campaign_id,
             email_type="received",
             lead_email=lead_email,
             limit=10,
         )
+        if received:
+            thread_row = received[0]
+        else:
+            sent, _ = await ic.list_emails(
+                campaign_id=settings.instantly_campaign_id,
+                email_type="sent",
+                lead_email=lead_email,
+                limit=10,
+            )
+            if sent:
+                thread_row = sent[0]
 
-    if not reply_id and items:
-        reply_id = str(items[0].get("id") or "").strip()
+        if thread_row:
+            reply_id = str(thread_row.get("id") or "").strip()
 
-    if not eaccount and items:
-        eaccount = extract_instantly_our_mailbox(items[0])
+    if thread_row:
+        row_account = extract_instantly_our_mailbox(thread_row)
+        # Thread owner wins; locked mailbox is a fallback for old rows.
+        eaccount = row_account or eaccount
 
-    if reply_id and not eaccount and lead_email:
+    if reply_id and not eaccount:
         email_row = await ic.get_email(reply_id)
         if email_row:
             eaccount = extract_instantly_our_mailbox(email_row)

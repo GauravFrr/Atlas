@@ -39,6 +39,38 @@ def test_re_subject_prefixes_re() -> None:
 
 
 @pytest.mark.asyncio
+async def test_resolve_context_fetches_sent_when_no_received() -> None:
+    lead = _lead(outbound_mailbox="gaurav@gauravxd.dev")
+    settings = SimpleNamespace(
+        has_instantly=True,
+        instantly_api_key="key",
+        instantly_campaign_id="camp",
+    )
+    mock_client = AsyncMock()
+    mock_client.is_configured = True
+    mock_client.list_emails = AsyncMock(
+        side_effect=[
+            ([], None),
+            (
+                [
+                    {
+                        "id": "sent-uuid-1",
+                        "eaccount": "gaurav@gauravxd.dev",
+                        "ue_type": 1,
+                        "from_address_email": "gaurav@gauravxd.dev",
+                    }
+                ],
+                None,
+            ),
+        ]
+    )
+
+    ctx = await resolve_instantly_reply_context(settings, lead, client=mock_client)
+    assert ctx["reply_to_uuid"] == "sent-uuid-1"
+    assert ctx["eaccount"] == "gaurav@gauravxd.dev"
+
+
+@pytest.mark.asyncio
 async def test_resolve_context_from_locked_mailbox_and_last_reply() -> None:
     lead = _lead(
         outbound_mailbox="gaurav@gauravxd.dev",
