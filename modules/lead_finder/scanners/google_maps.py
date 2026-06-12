@@ -22,29 +22,96 @@ from modules.lead_finder.demo_designer import build_demo_prompt, pick_design_var
 from modules.lead_finder.demo_premium_renderer import fetch_demo_copy, render_premium_demo
 
 
-# Priority niches to scan first â€” highest website upgrade potential
+# Priority niches to scan â€” every local business type that needs a website or automation.
+# Extend without code changes: HUNT_EXTRA_NICHES=med spa,boat repair in .env
 PRIORITY_NICHES = [
+    # Trades / home services
     "plumber", "electrician", "HVAC", "roofer", "landscaper",
+    "pest control", "locksmith", "cleaning service", "painter",
+    "carpenter", "handyman", "flooring contractor", "fencing contractor",
+    "garage door repair", "gutter cleaning", "pressure washing",
+    "tree service", "pool service", "appliance repair",
+    "window installation", "solar installer", "moving company",
+    "junk removal", "paving contractor", "masonry contractor",
+    "general contractor", "home remodeling", "kitchen remodeling",
+    "bathroom remodeling", "interior designer",
+    # Health & medical
     "dentist", "chiropractor", "optometrist", "physical therapy",
-    "restaurant", "cafe", "bakery", "food truck",
-    "lawyer", "accountant", "insurance agent",
-    "hair salon", "nail salon", "barber",
-    "gym", "personal trainer", "yoga studio",
-    "real estate agent", "property management",
-    "auto repair", "car wash", "mechanic",
-    "cleaning service", "pest control", "locksmith",
+    "dermatologist", "veterinarian", "orthodontist", "med spa",
+    "acupuncture clinic", "massage therapist", "home health care",
+    "urgent care clinic", "physiotherapy clinic", "dental clinic",
+    # Food & hospitality
+    "restaurant", "cafe", "bakery", "food truck", "pizza restaurant",
+    "catering service", "juice bar", "ice cream shop", "coffee shop",
+    "bar and grill", "banquet hall",
+    # Professional services
+    "lawyer", "accountant", "insurance agent", "financial advisor",
+    "tax preparation service", "bookkeeping service", "mortgage broker",
+    "travel agency", "staffing agency", "security service",
+    "immigration consultant", "notary public",
+    # Beauty & personal care
+    "hair salon", "nail salon", "barber", "spa", "tattoo studio",
+    "lash studio", "makeup artist", "beauty parlour",
+    # Fitness & wellness
+    "gym", "personal trainer", "yoga studio", "pilates studio",
+    "martial arts school", "dance studio", "crossfit gym", "swim school",
+    # Property
+    "real estate agent", "property management", "home inspector",
+    "self storage", "interior decorator", "packers and movers",
+    # Auto
+    "auto repair", "mechanic", "car wash", "auto detailing",
+    "tire shop", "auto body shop", "towing service", "driving school",
+    "car dealership", "bike repair shop",
+    # Events / pets / education / misc
+    "photographer", "wedding planner", "event venue", "florist",
+    "dog groomer", "pet boarding", "daycare center", "tutoring center",
+    "music school", "dry cleaner", "tailor", "computer repair",
+    "laundromat", "courier service", "printing service", "sign shop",
+    "coaching institute", "play school",
 ]
 
-# US cities to scan in priority order (highest income = highest willingness to pay)
+# Cities to scan â€” richest English-speaking markets first, then India + global hubs.
+# Extend without code changes: HUNT_EXTRA_CITIES=Berlin DE,Amsterdam NL in .env
 TARGET_CITIES = [
+    # USA â€” major metros
     "New York NY", "Los Angeles CA", "Chicago IL", "Houston TX",
     "Phoenix AZ", "Philadelphia PA", "San Antonio TX", "San Diego CA",
     "Dallas TX", "San Jose CA", "Austin TX", "Jacksonville FL",
     "Fort Worth TX", "Columbus OH", "Charlotte NC", "Indianapolis IN",
     "San Francisco CA", "Seattle WA", "Denver CO", "Nashville TN",
-    "London UK", "Manchester UK", "Birmingham UK",
-    "Sydney AU", "Melbourne AU", "Brisbane AU",
-    "Toronto CA", "Vancouver CA",
+    "Boston MA", "Portland OR", "Las Vegas NV", "Detroit MI",
+    "Memphis TN", "Louisville KY", "Baltimore MD", "Milwaukee WI",
+    "Albuquerque NM", "Tucson AZ", "Fresno CA", "Sacramento CA",
+    "Kansas City MO", "Mesa AZ", "Atlanta GA", "Omaha NE",
+    "Colorado Springs CO", "Raleigh NC", "Miami FL", "Long Beach CA",
+    "Virginia Beach VA", "Oakland CA", "Minneapolis MN", "Tulsa OK",
+    "Tampa FL", "Arlington TX", "New Orleans LA", "Wichita KS",
+    "Cleveland OH", "Bakersfield CA", "Honolulu HI", "Anaheim CA",
+    "Riverside CA", "Corpus Christi TX", "Lexington KY", "St. Louis MO",
+    "Pittsburgh PA", "Cincinnati OH", "Salt Lake City UT", "Orlando FL",
+    "Boise ID", "Richmond VA", "Scottsdale AZ", "Fort Lauderdale FL",
+    "Charleston SC", "Savannah GA", "Oklahoma City OK", "El Paso TX",
+    # UK & Ireland
+    "London UK", "Manchester UK", "Birmingham UK", "Leeds UK",
+    "Glasgow UK", "Liverpool UK", "Bristol UK", "Edinburgh UK",
+    "Sheffield UK", "Nottingham UK", "Dublin Ireland",
+    # Australia & New Zealand
+    "Sydney AU", "Melbourne AU", "Brisbane AU", "Perth AU",
+    "Adelaide AU", "Gold Coast AU", "Canberra AU",
+    "Auckland NZ", "Wellington NZ", "Christchurch NZ",
+    # Canada
+    "Toronto CA", "Vancouver CA", "Montreal CA", "Calgary CA",
+    "Ottawa CA", "Edmonton CA", "Mississauga CA",
+    # India â€” major metros + tier-2
+    "Mumbai India", "Delhi India", "Bangalore India", "Hyderabad India",
+    "Chennai India", "Pune India", "Kolkata India", "Ahmedabad India",
+    "Jaipur India", "Gurgaon India", "Noida India", "Chandigarh India",
+    "Indore India", "Lucknow India", "Kochi India", "Surat India",
+    "Nagpur India", "Coimbatore India", "Bhopal India", "Vadodara India",
+    # Middle East / Asia / Africa hubs (English-friendly)
+    "Dubai UAE", "Abu Dhabi UAE", "Sharjah UAE", "Doha Qatar",
+    "Singapore", "Kuala Lumpur Malaysia",
+    "Cape Town South Africa", "Johannesburg South Africa", "Durban South Africa",
 ]
 
 

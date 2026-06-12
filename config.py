@@ -184,6 +184,14 @@ class Settings(BaseSettings):
             "Empty + production = email-friendly modes only (skips M07 apps, M08 Etsy, etc.)"
         ),
     )
+    hunt_extra_niches: str = Field(
+        default="",
+        description="Comma-separated niches appended to the built-in rotation (e.g. 'boat repair,roofing supplier')",
+    )
+    hunt_extra_cities: str = Field(
+        default="",
+        description="Comma-separated cities appended to the built-in rotation (e.g. 'Berlin DE,Amsterdam NL')",
+    )
     min_lead_score: int = Field(default=6)
     email_cooldown_days: int = Field(default=3)
     max_revisions_per_order: int = Field(default=2)

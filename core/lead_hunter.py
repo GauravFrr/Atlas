@@ -24,13 +24,47 @@ from core.lead_sources import (
 )
 
 
+_TARGETS_CACHE: list[dict[str, str]] | None = None
+
+
+def _extra_list(raw: str) -> list[str]:
+    return [part.strip() for part in (raw or "").split(",") if part.strip()]
+
+
 def all_hunt_targets() -> list[dict[str, str]]:
+    """
+    Every niche × city combo, in a stable interleaved order so consecutive
+    cycles hit different cities and niches (not 100 niches of NYC in a row).
+    Extend via HUNT_EXTRA_NICHES / HUNT_EXTRA_CITIES env vars.
+    """
+    global _TARGETS_CACHE
+    if _TARGETS_CACHE is not None:
+        return _TARGETS_CACHE
+
     from modules.lead_finder.scanners.google_maps import PRIORITY_NICHES, TARGET_CITIES
 
+    niches = list(PRIORITY_NICHES)
+    cities = list(TARGET_CITIES)
+    try:
+        from config import get_settings
+
+        settings = get_settings()
+        niches += [n for n in _extra_list(getattr(settings, "hunt_extra_niches", "")) if n not in niches]
+        cities += [c for c in _extra_list(getattr(settings, "hunt_extra_cities", "")) if c not in cities]
+    except Exception:
+        pass
+
     pairs: list[dict[str, str]] = []
-    for city in TARGET_CITIES:
-        for niche in PRIORITY_NICHES:
+    for city in cities:
+        for niche in niches:
             pairs.append({"niche": niche, "city": city})
+
+    # Deterministic shuffle: stable across restarts (rotation_index stays valid)
+    # but consecutive indexes vary both market and niche.
+    import random
+
+    random.Random(42).shuffle(pairs)
+    _TARGETS_CACHE = pairs
     return pairs
 
 
