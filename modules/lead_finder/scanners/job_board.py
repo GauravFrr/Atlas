@@ -110,8 +110,8 @@ def _automation_primary_for_job(title: str) -> str:
         return "booking"
     if any(k in low for k in ("order", "fulfillment", "processor")):
         return "ordering"
-    if any(k in low for k in ("support", "customer service")):
-        return "ai_chat"
+    if any(k in low for k in ("support", "customer service", "help desk")):
+        return "customer_support"
     return "ai_chat"
 
 

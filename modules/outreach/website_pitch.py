@@ -122,6 +122,7 @@ def service_offer_for_lead(lead: MapsScanResult) -> ServiceOffer:
         "m24_chatbot",
         "m27_no_booking",
         "m28_no_ordering",
+        "m29_no_support",
     ):
         return ServiceOffer.AUTOMATION
 
@@ -260,6 +261,10 @@ _AUTOMATION_OFFERS: dict[str, str] = {
         "I'm a full-stack developer — I build custom tools and SaaS dashboards when "
         "off-the-shelf software doesn't fit your workflow."
     ),
+    "customer_support": (
+        "I build AI customer support for your site — it answers FAQs, handles common "
+        "requests, and escalates to you when a human is needed (24/7, no extra hires)."
+    ),
 }
 
 _OFFER_WEBSITE_NO_SITE = (
@@ -313,6 +318,8 @@ def demo_intro_line(lead: MapsScanResult, plan: PitchPlan | None = None) -> str:
         return "I put together a quick preview of online ordering on your site:"
     if primary in ("booking", "scheduling"):
         return "I put together a quick preview of the booking flow on your site:"
+    if primary == "customer_support":
+        return "I put together a quick preview of AI customer support on your site:"
     return "I put together a quick preview of the AI chat / automation on your site:"
 
 
@@ -335,6 +342,9 @@ def cta_line(lead: MapsScanResult, company: str, plan: PitchPlan | None = None) 
         "scheduling": f"Would self-serve scheduling for service calls be useful for {company}?",
         "whatsapp": f"Would a WhatsApp AI assistant for {company} be useful right now?",
         "custom_saas": f"Would a custom tool built for {company}'s workflow be worth a quick chat?",
+        "customer_support": (
+            f"Would AI customer support on {company}'s site be useful right now?"
+        ),
     }
     return asks.get(
         primary,
@@ -401,6 +411,10 @@ def fallback_icebreaker_for_plan(lead: MapsScanResult, plan: PitchPlan) -> str:
         "custom_saas": (
             f"Saw {biz} is growing — likely outgrowing spreadsheets and manual workflows "
             f"that a small custom tool could fix."
+        ),
+        "customer_support": (
+            f"Saw {biz} at {site} — no help desk or AI support, so customer questions "
+            f"wait for email replies or phone callbacks."
         ),
     }
     return gap_lines.get(

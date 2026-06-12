@@ -159,6 +159,13 @@ async def fetch_leads(
                 niche, city, limit, scan_local_fn
             ), "m28"
 
+        if mode == "m29_no_support":
+            from modules.lead_finder.scanners.website_automation import NoCustomerSupportScanner
+
+            return await NoCustomerSupportScanner(settings, llm).scan_maps(
+                niche, city, limit, scan_local_fn
+            ), "m29"
+
         logger.warning(f"[LeadFetcher] unknown mode {mode}, fallback m10")
         leads, src = await scan_local_fn(niche, city, limit, no_website_only=True)
         return leads, src

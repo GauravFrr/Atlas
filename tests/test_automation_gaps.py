@@ -42,3 +42,14 @@ def test_ai_chatbot_detected() -> None:
     html = '<script src="https://embed.tawk.to/abc123/default"></script>'
     gaps = detect_automation_gaps(html, "plumber")
     assert "ai_chat" not in gaps["automation_missing"]
+
+
+def test_customer_support_gap_on_plain_site() -> None:
+    html = "<html><body>Contact us by phone only.</body></html>"
+    gaps = detect_automation_gaps(html, "insurance agent")
+    assert "customer_support" in gaps["automation_missing"]
+
+
+def test_zendesk_counts_as_customer_support() -> None:
+    html = '<script src="https://static.zdassets.com/ekr/snippet.js"></script>'
+    assert not missing_category(html, "customer_support")

@@ -5,6 +5,7 @@ M25 social_only   — only Facebook/Instagram/Linktree → sell website + AI set
 M24 chatbot       — site missing AI chat / booking / ordering for their niche → automation.
 M27 no_booking    — booking-heavy niches (salon, dentist, clinic) with no booking widget.
 M28 no_ordering   — restaurants/cafes with no online ordering.
+M29 no_support    — site with no help desk / AI customer support widget.
 M26 new_business  — brand-new business (≤3 reviews) → website + automation bundle.
 
 All reuse Maps/OSM scan (scan_local_fn) → demo → Instantly pipeline.
@@ -241,6 +242,33 @@ class NoOrderingScanner(_SiteAutomationScanner):
             mode="m28_no_ordering",
             keep_fn=keep,
             log_label="M28",
+        )
+
+
+class NoCustomerSupportScanner(_SiteAutomationScanner):
+    """M29 — business site with no help desk / AI customer support."""
+
+    def __init__(self, settings: Any, llm: Any | None = None) -> None:
+        super().__init__(settings)
+
+    async def scan_maps(
+        self,
+        niche: str,
+        city: str,
+        limit: int,
+        scan_local_fn: Any,
+    ) -> list[MapsScanResult]:
+        def keep(gaps: dict, html: str) -> bool:
+            return (
+                missing_category(html, "customer_support")
+                and "customer_support" in gaps.get("automation_missing", [])
+            )
+
+        return await self._scan_with_filter(
+            niche, city, limit, scan_local_fn,
+            mode="m29_no_support",
+            keep_fn=keep,
+            log_label="M29",
         )
 
 

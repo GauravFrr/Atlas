@@ -87,6 +87,7 @@ def test_new_modes_registered() -> None:
         "m26_new_business",
         "m27_no_booking",
         "m28_no_ordering",
+        "m29_no_support",
         "m03_reddit",
         "m05_job_board",
     ):
@@ -119,3 +120,7 @@ def test_pitch_routing_for_new_modes() -> None:
     ordering = _maps("Pizza", "https://pizza.com")
     ordering.raw = {"hunt_mode": "m28_no_ordering", "automation_primary": "ordering"}
     assert service_offer_for_lead(ordering) == ServiceOffer.AUTOMATION
+
+    support = _maps("Shop", "https://shop.com")
+    support.raw = {"hunt_mode": "m29_no_support", "automation_primary": "customer_support"}
+    assert service_offer_for_lead(support) == ServiceOffer.AUTOMATION

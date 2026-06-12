@@ -31,6 +31,7 @@ HUNT_MODES: list[tuple[str, str]] = [
     ("m26_new_business", "M26 New business, no presence (website)"),
     ("m27_no_booking", "M27 No online booking (salon, clinic, gym…)"),
     ("m28_no_ordering", "M28 No online ordering (restaurant, cafe…)"),
+    ("m29_no_support", "M29 No AI customer support / help desk"),
 ]
 
 # Production default — local businesses / sites where email enrichment works.
@@ -40,6 +41,7 @@ PRODUCTION_HUNT_MODES: list[str] = [
     "m24_chatbot",        # AI chatbot + niche automation gaps
     "m27_no_booking",     # appointment booking missing
     "m28_no_ordering",    # online ordering missing
+    "m29_no_support",     # AI customer support / help desk missing
     "m25_social_only",    # website: only FB/Insta page
     "m10_no_website",     # website: no site at all
     "m04_low_reviews",    # reputation + website
@@ -76,6 +78,8 @@ MODE_ALIASES: dict[str, str] = {
     "new_business": "m26_new_business",
     "no_booking": "m27_no_booking",
     "no_ordering": "m28_no_ordering",
+    "no_support": "m29_no_support",
+    "customer_support": "m29_no_support",
 }
 
 

@@ -39,6 +39,10 @@ INTENT_KEYWORDS = [
     "scheduling software",
     "whatsapp bot",
     "ai agent for",
+    "customer support automation",
+    "ai customer support",
+    "help desk automation",
+    "automate customer service",
     # Website
     "my website is terrible",
     "website is outdated",
@@ -143,6 +147,8 @@ class RedditMiner:
                         auto_primary = "booking"
                     elif any(x in low_kw for x in ("order", "ordering")):
                         auto_primary = "ordering"
+                    elif any(x in low_kw for x in ("customer support", "help desk", "customer service")):
+                        auto_primary = "customer_support"
                     elif any(x in low_kw for x in ("saas", "developer", "software", "mvp", "app")):
                         auto_primary = "custom_saas"
                     else:

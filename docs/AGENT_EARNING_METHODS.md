@@ -326,6 +326,16 @@ PITCH:    "Hungry customers can't order from your site — they go to competitor
 EARN:     $500–2,000 ordering system setup
 ```
 
+### M29 — No AI customer support (`m29_no_support`)
+
+```
+TARGET:   Any business with a site but no help desk / support widget
+DETECT:   No Zendesk/Freshdesk/Gorgias/Help Scout or AI support on site
+PITCH:    "Customer questions wait for email — AI support answers FAQs 24/7"
+EARN:     $400–1,500 AI customer support setup + optional monthly retainer
+DECISION: Companies hiring support staff (M05) → pitch this instead of a new hire
+```
+
 ### M25 — Social-Page-Only Business (`m25_social_only`)
 
 ```

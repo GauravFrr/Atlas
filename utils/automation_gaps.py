@@ -99,13 +99,38 @@ AUTOMATION_SIGNATURES: dict[str, tuple[str, ...]] = {
         "wpforms",
         "gravityforms",
     ),
+    "customer_support": (
+        "zendesk",
+        "zdassets.com",
+        "freshdesk",
+        "helpscout",
+        "help scout",
+        "gorgias",
+        "kayako",
+        "liveagent",
+        "happyfox",
+        "desk.zoho",
+        "zoho.com/desk",
+        "servicenow",
+        "ada.support",
+        "forethought.ai",
+        "ultimate.ai",
+        "kustomer",
+        "help center",
+        "knowledge base",
+        "support ticket",
+        "customer support",
+        "/support",
+        "faq widget",
+        "support chat",
+    ),
 }
 
 # What each niche type should have — gaps become pitch targets.
 NICHE_AUTOMATION_NEEDS: dict[str, tuple[str, ...]] = {
   # Food & ordering
-    "restaurant": ("ordering", "booking", "ai_chat"),
-    "cafe": ("ordering", "ai_chat"),
+    "restaurant": ("ordering", "booking", "customer_support", "ai_chat"),
+    "cafe": ("ordering", "customer_support", "ai_chat"),
     "bakery": ("ordering", "ai_chat"),
     "pizza": ("ordering", "ai_chat"),
     "food truck": ("ordering", "ai_chat"),
@@ -128,9 +153,12 @@ NICHE_AUTOMATION_NEEDS: dict[str, tuple[str, ...]] = {
     # Professional services
     "lawyer": ("ai_chat", "intake_forms", "booking"),
     "accountant": ("booking", "intake_forms", "ai_chat"),
-    "insurance agent": ("ai_chat", "intake_forms"),
-    "real estate": ("ai_chat", "crm_followup", "booking"),
-    "realtor": ("ai_chat", "crm_followup", "booking"),
+    "insurance agent": ("customer_support", "ai_chat", "intake_forms"),
+    "real estate": ("customer_support", "ai_chat", "crm_followup", "booking"),
+    "realtor": ("customer_support", "ai_chat", "crm_followup", "booking"),
+    "ecommerce": ("customer_support", "ordering", "ai_chat"),
+    "retail": ("customer_support", "ordering", "ai_chat"),
+    "store": ("customer_support", "ordering", "ai_chat"),
     # Trades — service calls + chat
     "plumber": ("ai_chat", "booking", "scheduling"),
     "electrician": ("ai_chat", "booking", "scheduling"),
@@ -148,7 +176,7 @@ NICHE_AUTOMATION_NEEDS: dict[str, tuple[str, ...]] = {
     "auto repair": ("booking", "ai_chat"),
     "car wash": ("booking", "ai_chat"),
     # Default local service
-    "default": ("ai_chat", "booking", "scheduling"),
+    "default": ("customer_support", "ai_chat", "booking", "scheduling"),
 }
 
 # Human labels for pitches / Instantly variables
@@ -161,12 +189,16 @@ AUTOMATION_PITCH_LABELS: dict[str, str] = {
     "crm_followup": "automated lead follow-up so no enquiry goes cold",
     "intake_forms": "smart intake forms that qualify leads before you talk to them",
     "custom_saas": "custom software / SaaS tool built for your workflow",
+    "customer_support": (
+        "AI customer support — answers FAQs, handles tickets, escalates to you 24/7"
+    ),
 }
 
 # Priority when multiple gaps exist (pitch the highest-value one first)
 _GAP_PRIORITY = (
     "ordering",
     "booking",
+    "customer_support",
     "ai_chat",
     "scheduling",
     "whatsapp",
@@ -244,5 +276,8 @@ def problem_line_for_gaps(gaps: dict[str, Any], niche: str) -> str:
         "whatsapp": f"no WhatsApp automation — enquiries on mobile go unanswered",
         "intake_forms": f"no smart intake — you can't qualify leads before a call",
         "crm_followup": f"no automated follow-up — warm leads go cold",
+        "customer_support": (
+            f"no AI customer support — {n} visitors with questions wait for email or phone callbacks"
+        ),
     }
     return labels.get(primary, labels["ai_chat"])
