@@ -116,6 +116,19 @@ TARGET_CITIES = [
 
 
 @dataclass
+class GoogleScanMeta:
+    """Last Google Places scan stats — used to skip pointless OSM fallback."""
+
+    places_found: int = 0
+    leads_kept: int = 0
+    no_website_only: bool = True
+
+    @property
+    def filtered_all_for_no_website(self) -> bool:
+        return self.no_website_only and self.places_found > 0 and self.leads_kept == 0
+
+
+@dataclass
 class MapsScanResult:
     place_id: str
     business_name: str
@@ -154,6 +167,7 @@ class GoogleMapsScanner:
     def __init__(self, settings: Any, llm_router: Any | None = None) -> None:
         self.settings = settings
         self.llm = llm_router
+        self.last_scan_meta = GoogleScanMeta()
 
     async def scan(
         self,
@@ -271,6 +285,11 @@ class GoogleMapsScanner:
                 f"[M10] {len(places)} places found but 0 without website for '{query}'. "
                 "Use hunt mode m02_outdated (most US/UK businesses have a site)."
             )
+        self.last_scan_meta = GoogleScanMeta(
+            places_found=len(places),
+            leads_kept=len(leads),
+            no_website_only=no_website_only,
+        )
         logger.info(
             f"[M10] Found {len(leads)} leads for '{query}' "
             f"(no_website_only={no_website_only}, scanned={len(places)} places)"

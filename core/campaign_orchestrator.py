@@ -204,6 +204,14 @@ class CampaignOrchestrator:
         if leads or mode == "google":
             return leads, "google_maps"
 
+        meta = getattr(self.scanner, "last_scan_meta", None)
+        if meta and getattr(meta, "filtered_all_for_no_website", False):
+            logger.info(
+                "[Campaign] Google found businesses but all have websites — "
+                "skip OSM fallback (use m02_outdated / automation modes)"
+            )
+            return [], "google_maps"
+
         logger.info("[Campaign] Google returned 0 — trying free OpenStreetMap fallback")
         osm_leads = await self.osm_scanner.scan(
             niche=niche, city=city, limit=limit, no_website_only=no_website_only

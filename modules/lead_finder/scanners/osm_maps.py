@@ -47,6 +47,9 @@ CITY_BBOX_FALLBACK: dict[str, tuple[float, float, float, float]] = {
     "new york ny": (40.48, -74.26, 40.92, -73.70),
     "los angeles ca": (33.70, -118.65, 34.35, -118.05),
     "london uk": (51.28, -0.51, 51.69, 0.33),
+    "nottingham uk": (52.88, -1.28, 53.02, -1.05),
+    "manchester uk": (53.38, -2.35, 53.55, -2.08),
+    "birmingham uk": (52.38, -2.00, 52.55, -1.72),
     "denver co": (39.61, -105.11, 39.91, -104.71),
     "seattle wa": (47.49, -122.45, 47.73, -122.22),
     "miami fl": (25.70, -80.35, 25.95, -80.10),
@@ -63,6 +66,8 @@ NICHE_OSM_FILTERS: dict[str, list[str]] = {
     "chiropractor": ['healthcare="chiropractor"'],
     "optometrist": ['healthcare="optometrist"'],
     "physical therapy": ['healthcare="physiotherapist"'],
+    "physiotherapy clinic": ['healthcare="physiotherapist"'],
+    "physiotherapy": ['healthcare="physiotherapist"'],
     "restaurant": ['amenity="restaurant"'],
     "cafe": ['amenity="cafe"'],
     "bakery": ['shop="bakery"'],
@@ -262,11 +267,11 @@ class OSMMapsScanner:
             )
 
             query = f"""
-            [out:json][timeout:45];
+            [out:json][timeout:25];
             (
               {filter_lines}
             );
-            out center {min(limit * 3, 120)};
+            out center {min(limit * 2, 60)};
             """
 
             elements: list[dict[str, Any]] = []

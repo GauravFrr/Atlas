@@ -17,6 +17,7 @@ from loguru import logger
 from config import Settings
 from core.campaign_orchestrator import CampaignResult, run_campaign
 from core.lead_sources import (
+    PRODUCTION_HUNT_MODES,
     available_hunt_modes,
     hunt_mode_label,
     normalize_mode,
@@ -99,10 +100,11 @@ async def hunt_and_outreach(
         f"→ {len(targets)} markets, {len(modes)} hunt modes, target={leads} leads/run"
     )
     if len(modes) == 1:
+        prod = ",".join(PRODUCTION_HUNT_MODES)
         logger.warning(
             f"[Hunter] Only 1 hunt mode active ({modes[0]}). "
-            "Remove AUTOPILOT_HUNT_MODES on Railway to use all 7 production modes, "
-            "or set: m02_outdated,m10_no_website,m04_low_reviews,m01_broken_link,m17_apollo,m15_shopify"
+            f"Delete AUTOPILOT_HUNT_MODES on Railway to use all {len(PRODUCTION_HUNT_MODES)} "
+            f"production modes, or set: {prod}"
         )
     if scan == "google" and not settings.google_places_api_key:
         target, _ = pick_next_target(idx)
