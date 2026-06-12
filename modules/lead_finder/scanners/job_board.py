@@ -26,6 +26,11 @@ AUTOMATABLE_JOB_TITLES = [
     "administrative assistant",
     "lead generation",
     "cold email",
+    "appointment scheduler",
+    "receptionist",
+    "customer support",
+    "order processor",
+    "booking coordinator",
 ]
 
 LINKEDIN_JOB_QUERIES = [
@@ -33,7 +38,24 @@ LINKEDIN_JOB_QUERIES = [
     "marketing coordinator",
     "automation specialist",
     "operations assistant",
+    "virtual assistant",
+    "customer support representative",
+    "appointment setter",
 ]
+
+# Posts hiring humans for work AI/automation can replace → pitch custom automation
+AUTOMATION_REPLACEMENT_KEYWORDS = (
+    "chatbot",
+    "ai developer",
+    "automation",
+    "full stack",
+    "software developer",
+    "web developer",
+    "mvp",
+    "saas",
+    "booking system",
+    "scheduling",
+)
 
 
 @dataclass
@@ -82,10 +104,23 @@ def _parse_indeed_rss(xml_text: str, location: str, platform: str) -> list[JobPo
     return leads
 
 
+def _automation_primary_for_job(title: str) -> str:
+    low = title.lower()
+    if any(k in low for k in ("receptionist", "appointment", "scheduler", "booking")):
+        return "booking"
+    if any(k in low for k in ("order", "fulfillment", "processor")):
+        return "ordering"
+    if any(k in low for k in ("support", "customer service")):
+        return "ai_chat"
+    return "ai_chat"
+
+
 def _jobs_to_maps(leads: list[JobPostLead], niche: str, source: str) -> list[MapsScanResult]:
     out: list[MapsScanResult] = []
+    hunt_mode = "m05_job_board" if source == "m05" else "m11_linkedin_jobs"
     for j in leads:
         safe_id = re.sub(r"[^a-zA-Z0-9]", "_", j.job_id)[:40]
+        primary = _automation_primary_for_job(j.job_title)
         out.append(
             maps_lead(
                 source,
@@ -95,9 +130,14 @@ def _jobs_to_maps(leads: list[JobPostLead], niche: str, source: str) -> list[Map
                 j.location,
                 website=j.posting_url,
                 raw={
+                    "hunt_mode": hunt_mode,
                     "job_title": j.job_title,
                     "platform": j.platform,
                     "method": source,
+                    "automation_primary": primary,
+                    "problem_detected": (
+                        f"hiring for {j.job_title} — likely cheaper as AI + automation"
+                    ),
                 },
             )
         )

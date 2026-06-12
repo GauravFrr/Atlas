@@ -26,20 +26,26 @@ HUNT_MODES: list[tuple[str, str]] = [
     ("m15_shopify", "M15 Shopify store audit"),
     ("m16_podcast", "M16 Podcast guest outreach"),
     ("m17_apollo", "M17 Apollo cold email"),
-    ("m24_chatbot", "M24 Site without chat/booking (automation)"),
+    ("m24_chatbot", "M24 Missing AI chat / automation for niche"),
     ("m25_social_only", "M25 Social-page-only business (website)"),
     ("m26_new_business", "M26 New business, no presence (website)"),
+    ("m27_no_booking", "M27 No online booking (salon, clinic, gym…)"),
+    ("m28_no_ordering", "M28 No online ordering (restaurant, cafe…)"),
 ]
 
 # Production default — local businesses / sites where email enrichment works.
 # Ordered website-first, automation second (core offers), volume modes interleaved.
 PRODUCTION_HUNT_MODES: list[str] = [
     "m02_outdated",       # website rebuild
-    "m24_chatbot",        # automation: site has no chat/booking
-    "m25_social_only",    # website: only a FB/Insta page
+    "m24_chatbot",        # AI chatbot + niche automation gaps
+    "m27_no_booking",     # appointment booking missing
+    "m28_no_ordering",    # online ordering missing
+    "m25_social_only",    # website: only FB/Insta page
     "m10_no_website",     # website: no site at all
     "m04_low_reviews",    # reputation + website
     "m26_new_business",   # website: brand-new business
+    "m03_reddit",         # Reddit: need dev / chatbot / SaaS
+    "m05_job_board",      # hiring → pitch automation instead
     "m01_broken_link",    # website fix → rebuild
     "m17_apollo",         # B2B cold email
     "m15_shopify",        # store audit
@@ -68,6 +74,8 @@ MODE_ALIASES: dict[str, str] = {
     "chatbot": "m24_chatbot",
     "social_only": "m25_social_only",
     "new_business": "m26_new_business",
+    "no_booking": "m27_no_booking",
+    "no_ordering": "m28_no_ordering",
 }
 
 

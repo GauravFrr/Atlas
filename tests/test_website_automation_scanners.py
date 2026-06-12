@@ -67,22 +67,34 @@ async def test_new_business_filters_by_reviews() -> None:
     assert all(lead.raw["hunt_mode"] == "m26_new_business" for lead in out)
 
 
-def test_automation_signature_detection() -> None:
+def test_automation_gap_detection() -> None:
+    from utils.automation_gaps import detect_automation_gaps, has_any_automation
+
     has_tools = "<html><script src='https://widget.calendly.com/x.js'></script></html>"
     no_tools = "<html><body>Welcome to our plumbing site. Call us!</body></html>"
-    assert NoAutomationScanner._has_automation_tools(has_tools) is True
-    assert NoAutomationScanner._has_automation_tools(no_tools) is False
+    assert has_any_automation(has_tools) is True
+    gaps = detect_automation_gaps(no_tools, "plumber")
+    assert gaps["automation_missing"]
 
 
 def test_new_modes_registered() -> None:
     from core.lead_sources import PRODUCTION_HUNT_MODES, all_hunt_mode_ids, normalize_mode
 
     ids = all_hunt_mode_ids()
-    for mode in ("m24_chatbot", "m25_social_only", "m26_new_business"):
+    for mode in (
+        "m24_chatbot",
+        "m25_social_only",
+        "m26_new_business",
+        "m27_no_booking",
+        "m28_no_ordering",
+        "m03_reddit",
+        "m05_job_board",
+    ):
         assert mode in ids
         assert mode in PRODUCTION_HUNT_MODES
     assert normalize_mode("social_only") == "m25_social_only"
     assert normalize_mode("chatbot") == "m24_chatbot"
+    assert normalize_mode("no_booking") == "m27_no_booking"
 
 
 def test_pitch_routing_for_new_modes() -> None:
@@ -99,3 +111,11 @@ def test_pitch_routing_for_new_modes() -> None:
     newbiz = _maps("New Biz", None, reviews=0)
     newbiz.raw = {"hunt_mode": "m26_new_business"}
     assert service_offer_for_lead(newbiz) == ServiceOffer.WEBSITE
+
+    booking = _maps("Salon", "https://salon.com")
+    booking.raw = {"hunt_mode": "m27_no_booking", "automation_primary": "booking"}
+    assert service_offer_for_lead(booking) == ServiceOffer.AUTOMATION
+
+    ordering = _maps("Pizza", "https://pizza.com")
+    ordering.raw = {"hunt_mode": "m28_no_ordering", "automation_primary": "ordering"}
+    assert service_offer_for_lead(ordering) == ServiceOffer.AUTOMATION

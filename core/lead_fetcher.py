@@ -145,6 +145,20 @@ async def fetch_leads(
                 niche, city, limit, scan_local_fn
             ), "m26"
 
+        if mode == "m27_no_booking":
+            from modules.lead_finder.scanners.website_automation import NoBookingScanner
+
+            return await NoBookingScanner(settings, llm).scan_maps(
+                niche, city, limit, scan_local_fn
+            ), "m27"
+
+        if mode == "m28_no_ordering":
+            from modules.lead_finder.scanners.website_automation import NoOrderingScanner
+
+            return await NoOrderingScanner(settings, llm).scan_maps(
+                niche, city, limit, scan_local_fn
+            ), "m28"
+
         logger.warning(f"[LeadFetcher] unknown mode {mode}, fallback m10")
         leads, src = await scan_local_fn(niche, city, limit, no_website_only=True)
         return leads, src

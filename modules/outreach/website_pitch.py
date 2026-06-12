@@ -115,7 +115,14 @@ def service_offer_for_lead(lead: MapsScanResult) -> ServiceOffer:
     if _is_real_estate(lead):
         return ServiceOffer.AUTOMATION
 
-    if mode in ("m11_linkedin_jobs", "m05_job_board", "m24_chatbot"):
+    if mode in (
+        "m11_linkedin_jobs",
+        "m05_job_board",
+        "m03_reddit",
+        "m24_chatbot",
+        "m27_no_booking",
+        "m28_no_ordering",
+    ):
         return ServiceOffer.AUTOMATION
 
     if mode in ("m10_no_website", "m25_social_only", "m26_new_business"):
@@ -146,8 +153,11 @@ def resolve_pitch_plan(lead: MapsScanResult) -> PitchPlan:
             problem = "outdated or weak mobile site — losing visitors"
             label = "Website rebuild + mobile + lead capture (Method 02)"
     else:
-        problem = "no AI chat, booking, or automated follow-up on a decent site"
-        label = "AI chatbot + lead automation + online booking (Method 24)"
+        gaps = (getattr(lead, "raw", None) or {})
+        primary = gaps.get("automation_primary") or "ai_chat"
+        pitch = gaps.get("automation_pitch") or _automation_label(primary)
+        problem = gaps.get("problem_detected") or _automation_problem(primary, lead.niche)
+        label = f"{pitch} (Method 24)"
 
     return PitchPlan(
         service=service,
@@ -201,20 +211,56 @@ def cache_pitch_on_lead(lead: MapsScanResult) -> PitchPlan:
 
 # --- Email copy (professional, blueprint-aligned) ---
 
-_AUTOMATION_OFFERS = (
-    (
-        "I set up an AI chat widget on your existing site so visitors get instant answers "
-        "and qualified leads — 24/7, even when you're on a job."
+def _automation_label(primary: str) -> str:
+    from utils.automation_gaps import AUTOMATION_PITCH_LABELS
+
+    return AUTOMATION_PITCH_LABELS.get(primary, AUTOMATION_PITCH_LABELS["ai_chat"])
+
+
+def _automation_problem(primary: str, niche: str) -> str:
+    from utils.automation_gaps import problem_line_for_gaps
+
+    return problem_line_for_gaps({"automation_primary": primary}, niche)
+
+
+def _primary_automation(lead: MapsScanResult) -> str:
+    return str((getattr(lead, "raw", None) or {}).get("automation_primary") or "ai_chat")
+
+
+_AUTOMATION_OFFERS: dict[str, str] = {
+    "ai_chat": (
+        "I'm an AI engineer — I build custom chatbots for business websites that answer "
+        "questions, capture leads, and hand off to you 24/7 (not a generic widget)."
     ),
-    (
-        "I add automated lead capture and follow-up on top of your current site so "
-        "after-hours enquiries don't sit in voicemail."
+    "booking": (
+        "I build online appointment booking into your site — customers pick a slot, "
+        "get reminders, and you stop playing phone tag."
     ),
-    (
-        "I wire online booking and appointment reminders into your site so customers "
-        "can schedule without phone tag."
+    "ordering": (
+        "I add online ordering to your site so customers can place pickup/delivery orders "
+        "without calling — tied to your menu and hours."
     ),
-)
+    "scheduling": (
+        "I set up self-serve scheduling for service calls and visits so your team "
+        "isn't stuck on the phone all day."
+    ),
+    "whatsapp": (
+        "I wire a WhatsApp AI assistant so enquiries on mobile get instant replies "
+        "and qualified leads even when you're on a job."
+    ),
+    "intake_forms": (
+        "I build smart intake forms that qualify leads before they reach you — "
+        "fewer tire-kickers, more serious enquiries."
+    ),
+    "crm_followup": (
+        "I automate lead follow-up so every enquiry gets a reply and nurture sequence — "
+        "nothing goes cold in the inbox."
+    ),
+    "custom_saas": (
+        "I'm a full-stack developer — I build custom tools and SaaS dashboards when "
+        "off-the-shelf software doesn't fit your workflow."
+    ),
+}
 
 _OFFER_WEBSITE_NO_SITE = (
     "I build modern, mobile-friendly sites with built-in lead capture — so new customers "
@@ -251,9 +297,9 @@ def offer_line(lead: MapsScanResult, plan: PitchPlan | None = None) -> str:
         if p.tier == WebsitePitchTier.NO_SITE:
             return _OFFER_WEBSITE_NO_SITE
         return _OFFER_WEBSITE_OUTDATED
-    digest = hashlib.sha256(lead.place_id.encode("utf-8")).hexdigest()
-    idx = int(digest[:8], 16) % len(_AUTOMATION_OFFERS)
-    return f"{_AUTOMATION_OFFERS[idx]} {_OFFER_AUTOMATION_SUFFIX}"
+    primary = _primary_automation(lead)
+    offer = _AUTOMATION_OFFERS.get(primary) or _AUTOMATION_OFFERS["ai_chat"]
+    return f"{offer} {_OFFER_AUTOMATION_SUFFIX}"
 
 
 def demo_intro_line(lead: MapsScanResult, plan: PitchPlan | None = None) -> str:
@@ -262,7 +308,12 @@ def demo_intro_line(lead: MapsScanResult, plan: PitchPlan | None = None) -> str:
         return "I put together a quick brand landing page preview if you want a look:"
     if p.service == ServiceOffer.WEBSITE:
         return "I put together a quick site preview if you want a look:"
-    return "I put together a quick preview of the chat / booking flow on your site:"
+    primary = _primary_automation(lead)
+    if primary == "ordering":
+        return "I put together a quick preview of online ordering on your site:"
+    if primary in ("booking", "scheduling"):
+        return "I put together a quick preview of the booking flow on your site:"
+    return "I put together a quick preview of the AI chat / automation on your site:"
 
 
 def cta_line(lead: MapsScanResult, company: str, plan: PitchPlan | None = None) -> str:
@@ -276,9 +327,18 @@ def cta_line(lead: MapsScanResult, company: str, plan: PitchPlan | None = None) 
         if p.tier == WebsitePitchTier.NO_SITE:
             return f"Would getting {company} online with lead capture be useful right now?"
         return f"Would a refreshed, mobile-friendly site be useful for {company} right now?"
-    return (
-        f"Would adding chat, automated follow-up, or online booking be useful for "
-        f"{company} right now?"
+    primary = _primary_automation(lead)
+    asks = {
+        "ai_chat": f"Would a custom AI chatbot on {company}'s site be useful right now?",
+        "booking": f"Would online appointment booking be useful for {company} right now?",
+        "ordering": f"Would online ordering on {company}'s site be useful right now?",
+        "scheduling": f"Would self-serve scheduling for service calls be useful for {company}?",
+        "whatsapp": f"Would a WhatsApp AI assistant for {company} be useful right now?",
+        "custom_saas": f"Would a custom tool built for {company}'s workflow be worth a quick chat?",
+    }
+    return asks.get(
+        primary,
+        f"Would AI chat, booking, or automation be useful for {company} right now?",
     )
 
 
@@ -320,9 +380,35 @@ def fallback_icebreaker_for_plan(lead: MapsScanResult, plan: PitchPlan) -> str:
             f"You're likely losing visitors who never call or fill out a form."
         )
 
-    return (
-        f"Saw {biz} already has a solid site at {site}. "
-        f"But there's no AI chat, online booking, or automated follow-up when someone reaches out."
+    primary = _primary_automation(lead)
+    gap_lines = {
+        "ai_chat": (
+            f"Saw {biz} has a site at {site}, but no AI chatbot — "
+            f"after-hours visitors can't get answers or leave details."
+        ),
+        "booking": (
+            f"Saw {biz} at {site} — customers still have to call to book "
+            f"instead of picking a time online."
+        ),
+        "ordering": (
+            f"Saw {biz} at {site} — no way to place an order online, "
+            f"so hungry customers bounce to competitors."
+        ),
+        "scheduling": (
+            f"Saw {biz} at {site} — every service call still starts with phone tag "
+            f"instead of self-serve scheduling."
+        ),
+        "custom_saas": (
+            f"Saw {biz} is growing — likely outgrowing spreadsheets and manual workflows "
+            f"that a small custom tool could fix."
+        ),
+    }
+    return gap_lines.get(
+        primary,
+        (
+            f"Saw {biz} already has a solid site at {site}. "
+            f"But there's no AI chat, booking, or automated follow-up when someone reaches out."
+        ),
     )
 
 

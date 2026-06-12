@@ -14,18 +14,34 @@ from modules.lead_finder.lead_adapter import maps_lead
 from modules.lead_finder.scanners.google_maps import MapsScanResult
 
 INTENT_KEYWORDS = [
+    # Custom dev / SaaS
     "looking for a developer",
+    "need a developer",
     "need someone to build",
-    "does anyone recommend",
-    "anyone recommend",
-    "recommend a",
-    "tired of doing this manually",
+    "build a saas",
+    "build an app",
+    "mvp developer",
+    "full stack developer",
+    "hire a freelancer",
+    "hire a developer",
+    "custom software",
+    "build a platform",
+    # AI / automation
+    "need a chatbot",
+    "ai chatbot",
+    "build a chatbot",
+    "automate my business",
     "how do i automate",
+    "tired of doing this manually",
+    "appointment booking system",
+    "online booking system",
+    "order management system",
+    "scheduling software",
+    "whatsapp bot",
+    "ai agent for",
+    # Website
     "my website is terrible",
     "website is outdated",
-    "need a chatbot",
-    "need help with cold email",
-    "hire a freelancer",
     "struggling with my website",
     "need a website",
     "need a web designer",
@@ -34,9 +50,14 @@ INTENT_KEYWORDS = [
     "without a website",
     "bad website",
     "redo my site",
+    # Growth
     "need more leads",
     "need more customers",
     "book more appointments",
+    "does anyone recommend",
+    "anyone recommend",
+    "recommend a",
+    "need help with cold email",
 ]
 
 TARGET_SUBREDDITS = [
@@ -115,6 +136,17 @@ class RedditMiner:
                     if not kw:
                         continue
                     pid = data.get("id", "")
+                    low_kw = kw.lower()
+                    if any(x in low_kw for x in ("chatbot", "ai ", "whatsapp")):
+                        auto_primary = "ai_chat"
+                    elif any(x in low_kw for x in ("booking", "appointment", "schedul")):
+                        auto_primary = "booking"
+                    elif any(x in low_kw for x in ("order", "ordering")):
+                        auto_primary = "ordering"
+                    elif any(x in low_kw for x in ("saas", "developer", "software", "mvp", "app")):
+                        auto_primary = "custom_saas"
+                    else:
+                        auto_primary = "ai_chat"
                     leads.append(
                         maps_lead(
                             "m03",
@@ -124,10 +156,12 @@ class RedditMiner:
                             city,
                             website=data.get("url"),
                             raw={
+                                "hunt_mode": "m03_reddit",
                                 "subreddit": sub,
                                 "author": data.get("author"),
                                 "permalink": f"https://reddit.com{data.get('permalink', '')}",
                                 "keyword": kw,
+                                "automation_primary": auto_primary,
                                 "outreach_channel": "reddit_reply",
                             },
                         )

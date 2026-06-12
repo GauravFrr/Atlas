@@ -297,14 +297,33 @@ DECISION: Brain picks niche → finds leads → generates icebreakers → sends 
 > These feed the same Maps → demo → Instantly pipeline. They exist because
 > "website or automation" is the agent's main product line.
 
-### M24 — No Chat/Booking Detector (`m24_chatbot`)
+### M24 — Niche automation gaps (`m24_chatbot`)
 
 ```
-TARGET:   US/UK/AU local businesses with a decent site but ZERO automation
-DETECT:   Fetch site HTML → no Calendly/Intercom/Tawk/WhatsApp/booking widget found
-PITCH:    "Your site looks good but visitors can't book or chat — you're losing after-hours leads"
-EARN:     $300–800 setup + optional monthly retainer (maps to Method 24 delivery)
-DECISION: Modern site + no tools → AUTOMATION pitch (never a new website)
+TARGET:   Local businesses missing the automation their niche needs
+DETECT:   Fetch site HTML → check AI chat, booking, ordering, scheduling, WhatsApp, intake
+PITCH:    Niche-specific — AI chatbot (trades), booking (salon/clinic), ordering (restaurant)
+EARN:     $300–2,000 setup + optional monthly retainer (AI engineer + full-stack dev stack)
+DECISION: Modern site + missing tools → AUTOMATION pitch (never a new website)
+OWNER:    Gaurav — AI engineer, web dev, custom SaaS (github.com/GauravFrr)
+```
+
+### M27 — No online booking (`m27_no_booking`)
+
+```
+TARGET:   Salons, dentists, gyms, clinics, lawyers — niches that live on appointments
+DETECT:   No Calendly/Acuity/Booksy/Fresha/Mindbody on site
+PITCH:    "Customers still call to book — online scheduling + reminders"
+EARN:     $400–1,200 booking automation setup
+```
+
+### M28 — No online ordering (`m28_no_ordering`)
+
+```
+TARGET:   Restaurants, cafes, bakeries, pizza shops
+DETECT:   No Toast/ChowNow/Shopify ordering / "order online" on site
+PITCH:    "Hungry customers can't order from your site — they go to competitors"
+EARN:     $500–2,000 ordering system setup
 ```
 
 ### M25 — Social-Page-Only Business (`m25_social_only`)
