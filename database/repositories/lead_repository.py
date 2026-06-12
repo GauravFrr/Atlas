@@ -468,6 +468,57 @@ class LeadRepository:
         )
         return {row[0]: row[1] for row in result.all()}
 
+    async def count_inventory_summary(self, session: AsyncSession) -> dict[str, Any]:
+        """Outreach vs resale inventory — skipped often means no email (saved for export)."""
+        base = Lead.is_deleted.is_(False)
+        total_r = await session.execute(select(func.count(Lead.id)).where(base))
+        total = int(total_r.scalar_one() or 0)
+
+        email_r = await session.execute(
+            select(func.count(Lead.id)).where(
+                base,
+                Lead.email.is_not(None),
+                Lead.email != "",
+            )
+        )
+        with_email = int(email_r.scalar_one() or 0)
+
+        outreach_r = await session.execute(
+            select(func.count(Lead.id)).where(
+                base,
+                Lead.status.in_(
+                    (
+                        LeadStatus.NEW,
+                        LeadStatus.DRAFT_READY,
+                        LeadStatus.CONTACTED,
+                        LeadStatus.REPLIED,
+                    )
+                ),
+                Lead.email.is_not(None),
+            )
+        )
+        outreach_pipeline = int(outreach_r.scalar_one() or 0)
+
+        skip_reason_r = await session.execute(
+            select(Lead.problem_detected, func.count(Lead.id))
+            .where(base, Lead.status == LeadStatus.SKIPPED)
+            .group_by(Lead.problem_detected)
+            .order_by(func.count(Lead.id).desc())
+            .limit(5)
+        )
+        skip_reasons = {
+            (row[0] or "unknown"): row[1] for row in skip_reason_r.all()
+        }
+
+        return {
+            "total": total,
+            "with_email": with_email,
+            "no_email": max(0, total - with_email),
+            "outreach_pipeline": outreach_pipeline,
+            "tier_counts": await self.count_by_package_tier(session),
+            "skip_reasons": skip_reasons,
+        }
+
     async def list_recent(
         self, session: AsyncSession, limit: int = 50
     ) -> list[Lead]:

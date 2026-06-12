@@ -21,21 +21,53 @@ async def fetch_status(settings: Settings) -> str:
     factory = get_session_factory()
     async with factory() as session:
         counts = await repo.count_by_status(session)
+        inv = await repo.count_inventory_summary(session)
         pending_replies = await repo.list_unread_replies(session, limit=20)
         deliveries = await repo.list_pending_deliveries(session, limit=20)
 
     lines = [
         header_block(settings, "Pipeline status"),
         "",
-        "<b>Leads by status</b>",
+        "<b>Inventory</b>",
+        f"  • Total in DB — {inv['total']}",
+        f"  • <b>Has email</b> (sellable) — {inv['with_email']}",
+        f"  • No email (saved only) — {inv['no_email']}",
+        "",
+        "<b>Outreach pipeline</b> (has email)",
+        f"  • new — {counts.get(LeadStatus.NEW, 0)}",
+        f"  • draft_ready — {counts.get(LeadStatus.DRAFT_READY, 0)}",
+        f"  • contacted — {counts.get(LeadStatus.CONTACTED, 0)}",
+        f"  • replied — {counts.get(LeadStatus.REPLIED, 0)}",
     ]
-    for status, n in sorted(counts.items(), key=lambda x: -x[1]):
-        lines.append(f"  • <code>{esc(status)}</code> — {n}")
+    tiers = inv.get("tier_counts") or {}
+    if tiers:
+        lines.extend(["", "<b>Sell packages</b> (has email)"])
+        for tier in ("exclusive", "enriched", "standard", "basic"):
+            n = tiers.get(tier, 0)
+            if n:
+                lines.append(f"  • {tier} — {n}")
+        unsorted = tiers.get("unsorted", 0)
+        if unsorted:
+            lines.append(f"  • unsorted — {unsorted}")
+
+    skipped = counts.get(LeadStatus.SKIPPED, 0)
+    if skipped:
+        lines.extend(
+            [
+                "",
+                f"<b>Skipped — {skipped}</b> <i>(mostly no email; kept for /export)</i>",
+            ]
+        )
+        for reason, n in list((inv.get("skip_reasons") or {}).items())[:3]:
+            lines.append(f"  • {esc(reason)} — {n}")
+
     lines.extend(
         [
             "",
             f"🔔 <b>Need reply draft:</b> {len(pending_replies)}",
             f"📦 <b>Pending delivery:</b> {len(deliveries)}",
+            "",
+            "<i>Tip: /export for CSV · add HUNTER_API_KEY + GOOGLE_PLACES for more emails</i>",
         ]
     )
     return "\n".join(lines)
