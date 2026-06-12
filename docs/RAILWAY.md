@@ -90,16 +90,27 @@ Header `X-Webhook-Secret` = `INSTANTLY_WEBHOOK_SECRET` (if set)
 GET https://YOUR-RAILWAY-DOMAIN/health
 ```
 
-## 6. Telegram approval bot (still local or second service)
-
-Inline buttons need long polling. Options:
+## 6. Telegram approval bot (second Railway service)
 
 | Option | How |
 |--------|-----|
-| **A (simple)** | Keep on your PC: `python scripts/run_telegram_approvals.py` |
-| **B** | Second Railway service: set variable `RAILWAY_SERVICE_ROLE=telegram` |
+| **Local** | `python scripts/run_telegram_approvals.py` (long polling) |
+| **Railway** | Service 2: `RAILWAY_SERVICE_ROLE=telegram` + **Generate domain** |
 
-Webhook server and Telegram bot can be separate services (same `railway.toml` start command).
+On Railway the bot uses **webhooks** (not long polling) so connections don’t drop with `httpx.ReadError`.
+
+1. Telegram service → **Settings → Networking → Generate domain** (e.g. `atlas-telegram-production.up.railway.app`).
+2. Railway sets `RAILWAY_PUBLIC_DOMAIN` automatically → webhook URL becomes `https://YOUR-DOMAIN/telegram/webhook`.
+3. Optional override: `TELEGRAM_WEBHOOK_URL=https://YOUR-DOMAIN/telegram/webhook`
+4. Healthcheck path: `/health` on the **Telegram** service (not the webhook service).
+
+Verify after deploy:
+
+```bash
+curl https://YOUR-TELEGRAM-DOMAIN/health
+```
+
+Logs should show: `Telegram webhook registered → https://...`
 
 ## 7. Verify
 

@@ -127,6 +127,18 @@ class Settings(BaseSettings):
         default=True,
         description="Instantly/webhook/sync → draft reply + Telegram approval automatically",
     )
+    telegram_use_webhook: bool = Field(
+        default=False,
+        description="Use webhook mode (auto on Railway when RAILWAY_PUBLIC_DOMAIN is set)",
+    )
+    telegram_webhook_url: str = Field(
+        default="",
+        description="Full public webhook URL; default https://RAILWAY_PUBLIC_DOMAIN/telegram/webhook",
+    )
+    telegram_webhook_path: str = Field(
+        default="telegram/webhook",
+        description="URL path segment for Telegram POST updates (Railway webhook mode)",
+    )
     twilio_account_sid: str = Field(default="")
     twilio_auth_token: str = Field(default="")
 
@@ -427,6 +439,36 @@ class Settings(BaseSettings):
     @property
     def has_telegram(self) -> bool:
         return bool(self.telegram_bot_token and self.telegram_chat_id)
+
+    @property
+    def telegram_webhook_enabled(self) -> bool:
+        import os
+
+        if not self.has_telegram:
+            return False
+        if self.telegram_use_webhook:
+            return True
+        if (os.environ.get("TELEGRAM_USE_WEBHOOK") or "").strip().lower() in (
+            "1",
+            "true",
+            "yes",
+        ):
+            return True
+        return bool(os.environ.get("RAILWAY_PUBLIC_DOMAIN", "").strip())
+
+    def resolved_telegram_webhook_url(self) -> str:
+        import os
+        from urllib.parse import urljoin
+
+        explicit = (self.telegram_webhook_url or "").strip().rstrip("/")
+        if explicit:
+            return explicit
+        domain = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "").strip()
+        if not domain:
+            return ""
+        path = (self.telegram_webhook_path or "telegram/webhook").strip("/")
+        base = f"https://{domain}/"
+        return urljoin(base, path).rstrip("/")
 
     @property
     def has_smtp(self) -> bool:

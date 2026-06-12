@@ -27,6 +27,7 @@ check_telegram_import()
 from config import get_settings
 from database.connection import init_db
 from utils.telegram_approval import build_application
+from utils.telegram_bot.runner import run_bot
 
 
 def main() -> None:
@@ -42,9 +43,13 @@ def main() -> None:
     name = getattr(settings, "telegram_bot_display_name", None) or "Atlas"
     print(f"{name} bot listening — owner panel + email approvals")
     print(f"Owner chat id: {settings.telegram_chat_id}")
+    if settings.telegram_webhook_enabled:
+        url = settings.resolved_telegram_webhook_url()
+        print(f"Webhook mode → {url or '(set RAILWAY_PUBLIC_DOMAIN or TELEGRAM_WEBHOOK_URL)'}")
+    else:
+        print("Polling mode (local)")
     print("Send /start in Telegram to open the menu")
-    # run_polling owns the event loop — do not wrap in asyncio.run() (Windows error)
-    app.run_polling(drop_pending_updates=True)
+    run_bot(app, settings)
 
 
 if __name__ == "__main__":
