@@ -167,7 +167,12 @@ def persist_maps_meta(lead: Lead, maps_lead: MapsScanResult, *, demo_url: str | 
     if raw.get("hunt_mode"):
         data["hunt_mode"] = raw["hunt_mode"]
     if raw:
-        data["raw"] = {**(data.get("raw") or {}), **raw}
+        from utils.json_safe import to_jsonable
+
+        data["raw"] = {
+            **(data.get("raw") or {}),
+            **to_jsonable(raw),
+        }
     if demo_url:
         data["demo_url"] = demo_url
     if maps_lead.email and not is_blocked_email(maps_lead.email):

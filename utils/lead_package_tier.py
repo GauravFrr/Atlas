@@ -101,7 +101,9 @@ def sync_maps_enrichment(lead: Any, maps_lead: Any) -> None:
     if raw.get("hunt_mode"):
         data["hunt_mode"] = raw["hunt_mode"]
     if raw.get("outdated_audit"):
-        data["website_audit"] = raw["outdated_audit"]
+        from utils.json_safe import to_jsonable
+
+        data["website_audit"] = to_jsonable(raw["outdated_audit"])
     for key in (
         "website_pitch_tier",
         "service_to_pitch",

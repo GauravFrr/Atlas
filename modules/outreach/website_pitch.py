@@ -179,7 +179,12 @@ async def ensure_website_audit(lead: MapsScanResult, settings: Any) -> None:
         location=lead.city,
     )
     if audit:
-        lead.raw = {**(lead.raw or {}), "outdated_audit": audit}
+        from utils.json_safe import to_jsonable
+
+        lead.raw = {
+            **(lead.raw or {}),
+            "outdated_audit": to_jsonable(audit),
+        }
 
 
 def cache_pitch_on_lead(lead: MapsScanResult) -> PitchPlan:

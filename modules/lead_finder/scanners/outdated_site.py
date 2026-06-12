@@ -152,7 +152,9 @@ class OutdatedSiteScanner:
                 continue
             audited.append((lead, audit))
             if audit.is_target:
-                lead.raw = {**lead.raw, "outdated_audit": audit}
+                from utils.json_safe import to_jsonable
+
+                lead.raw = {**lead.raw, "outdated_audit": to_jsonable(audit)}
                 kept.append(lead)
             if len(kept) >= limit:
                 break
@@ -160,9 +162,11 @@ class OutdatedSiteScanner:
         if not kept and audited and sparse_fallback:
             audited.sort(key=lambda pair: pair[1].design_score)
             for lead, audit in audited[:limit]:
+                from utils.json_safe import to_jsonable
+
                 lead.raw = {
                     **lead.raw,
-                    "outdated_audit": audit,
+                    "outdated_audit": to_jsonable(audit),
                     "m02_sparse_fallback": True,
                 }
                 kept.append(lead)
