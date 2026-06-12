@@ -101,8 +101,17 @@ On Railway the bot uses **webhooks** (not long polling) so connections don’t d
 
 1. Telegram service → **Settings → Networking → Generate domain** (e.g. `atlas-telegram-production.up.railway.app`).
 2. Railway sets `RAILWAY_PUBLIC_DOMAIN` automatically → webhook URL becomes `https://YOUR-DOMAIN/telegram/webhook`.
-3. Optional override: `TELEGRAM_WEBHOOK_URL=https://YOUR-DOMAIN/telegram/webhook`
-4. Healthcheck path: `/health` on the **Telegram** service (not the webhook service).
+3. On **Service 2 (Telegram)** add (recommended — explicit):
+
+| Variable | Value |
+|----------|--------|
+| `PORT` | `8080` |
+| `TELEGRAM_WEBHOOK_URL` | `https://YOUR-TELEGRAM-DOMAIN.up.railway.app/telegram/webhook` |
+
+Example: `https://service-2-telegram-production.up.railway.app/telegram/webhook`
+
+4. Networking → domain port = **`8080`** (must match `PORT`).
+5. Healthcheck path: `/health` on the **Telegram** service (not the webhook service).
 
 Verify after deploy:
 

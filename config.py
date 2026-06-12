@@ -446,6 +446,8 @@ class Settings(BaseSettings):
 
         if not self.has_telegram:
             return False
+        if (self.telegram_webhook_url or "").strip():
+            return True
         if self.telegram_use_webhook:
             return True
         if (os.environ.get("TELEGRAM_USE_WEBHOOK") or "").strip().lower() in (
