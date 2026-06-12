@@ -30,13 +30,13 @@ HUNT_MODES: list[tuple[str, str]] = [
 
 # Production default — local businesses / sites where email enrichment works
 PRODUCTION_HUNT_MODES: list[str] = [
-    "m10_no_website",
     "m02_outdated",
+    "m10_no_website",
     "m04_low_reviews",
     "m01_broken_link",
     "m17_apollo",
-    "m06_youtube",
     "m15_shopify",
+    "m06_youtube",
 ]
 
 # Aliases for older state files

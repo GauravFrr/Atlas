@@ -107,24 +107,52 @@ class GoogleMapsScanner:
         logger.info(f"[M10] Google Maps Scanner: niche={niche}, city={city}, limit={limit}")
         query = f"{niche} in {city}"
         search_url = "https://maps.googleapis.com/maps/api/place/textsearch/json"
-        
-        leads = []
-        async with httpx.AsyncClient() as client:
-            # 1. Text Search to get place_ids
-            search_resp = await client.get(search_url, params={"query": query, "key": api_key})
-            if search_resp.status_code != 200:
-                logger.error(f"[M10] Places API error: {search_resp.text}")
-                return leads
-            
-            data = search_resp.json()
-            places = data.get("results", [])
+
+        leads: list[MapsScanResult] = []
+        seen_ids: set[str] = set()
+        async with httpx.AsyncClient(timeout=45.0) as client:
+            places: list[dict[str, Any]] = []
+            next_token: str | None = None
+            pages = 0
+            while len(places) < limit and pages < 3:
+                params: dict[str, str] = {"query": query, "key": api_key}
+                if next_token:
+                    params["pagetoken"] = next_token
+                    await asyncio.sleep(2.0)
+                search_resp = await client.get(search_url, params=params)
+                if search_resp.status_code != 200:
+                    logger.error(f"[M10] Places API HTTP {search_resp.status_code}: {search_resp.text[:300]}")
+                    break
+                data = search_resp.json()
+                status = str(data.get("status") or "")
+                if status not in ("OK", "ZERO_RESULTS"):
+                    logger.error(
+                        f"[M10] Places text search failed status={status} "
+                        f"error={data.get('error_message', '')} query={query!r}"
+                    )
+                    break
+                batch = data.get("results") or []
+                for row in batch:
+                    pid = row.get("place_id")
+                    if pid and pid not in seen_ids:
+                        seen_ids.add(pid)
+                        places.append(row)
+                pages += 1
+                next_token = data.get("next_page_token")
+                if not next_token or not batch:
+                    break
+
             if not places:
-                logger.info(f"[M10] No places found for '{query}'")
+                logger.info(f"[M10] No places found for '{query}' (status OK but empty)")
                 return leads
+
+            logger.info(f"[M10] Text search returned {len(places)} place(s) for '{query}'")
 
             # 2. Get Details for each place
             details_url = "https://maps.googleapis.com/maps/api/place/details/json"
-            for place in places[:limit]:
+            for place in places:
+                if len(leads) >= limit:
+                    break
                 place_id = place.get("place_id")
                 if not place_id:
                     continue
@@ -162,11 +190,11 @@ class GoogleMapsScanner:
                     raw=det_data
                 )
                 leads.append(lead)
-                
-                if len(leads) >= limit:
-                    break
 
-        logger.info(f"[M10] Found {len(leads)} leads for '{query}' (No website only: {no_website_only})")
+        logger.info(
+            f"[M10] Found {len(leads)} leads for '{query}' "
+            f"(no_website_only={no_website_only}, scanned={len(places)} places)"
+        )
         return leads
 
     async def scan_bulk(

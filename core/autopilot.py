@@ -48,14 +48,17 @@ def _save_state(state: dict[str, Any]) -> None:
 
 
 def _leads_per_run(settings: Settings) -> int:
+    configured = int(getattr(settings, "autopilot_leads_per_run", 0) or 0)
+    if configured > 0:
+        return configured
     try:
         p = Path("data/dashboard_prefs.json")
         if p.is_file():
             data = json.loads(p.read_text(encoding="utf-8"))
-            return int(data.get("leads_per_run") or 10)
+            return int(data.get("leads_per_run") or 20)
     except Exception:
         pass
-    return 10
+    return 20
 
 
 def _find_next_csv(state: dict[str, Any]) -> Path | None:

@@ -91,22 +91,7 @@ class AgentLoop:
             except Exception as e:
                 logger.warning(f"[Tick] Reply sync: {e}")
 
-        if getattr(self.settings, "resume_incomplete_on_start", True):
-            try:
-                from core.lead_resume import run_resume_queue
-                from utils.send_router import resolve_send_mode
-
-                mode = resolve_send_mode(
-                    self.settings, self.settings.email_send_mode or "instantly"
-                )
-                cap = int(getattr(self.settings, "resume_max_per_run", 10) or 10)
-                stats = await run_resume_queue(
-                    self.settings, max_leads=cap, send_mode=mode
-                )
-                if stats.get("queued"):
-                    logger.info(f"[Tick] Resume: {stats}")
-            except Exception as e:
-                logger.warning(f"[Tick] Resume queue: {e}")
+        # Resume + hunt order lives in core.autopilot.run_once (avoid running resume twice).
 
         # 1. Read current agent state
         agent_state = await self._agent.build_current_state()

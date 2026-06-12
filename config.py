@@ -162,8 +162,16 @@ class Settings(BaseSettings):
         description="On autopilot start, finish stored leads (demo/email/draft/send) before new hunt",
     )
     resume_max_per_run: int = Field(
-        default=10,
-        description="Max incomplete leads to resume per autopilot cycle",
+        default=3,
+        description="Max incomplete leads to resume per cycle (keep low so new hunt runs every tick)",
+    )
+    autopilot_leads_per_run: int = Field(
+        default=20,
+        description="New leads to hunt + process per autopilot cycle (scan pulls more via buffer)",
+    )
+    scan_buffer_multiplier: int = Field(
+        default=5,
+        description="Scan N× target leads from Maps/OSM before dedupe (more inventory)",
     )
     resume_cooldown_minutes: int = Field(
         default=25,

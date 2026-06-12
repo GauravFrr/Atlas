@@ -270,7 +270,12 @@ class CampaignOrchestrator:
             started_at=started.isoformat(),
         )
 
-        scan_limit = max(leads * scan_buffer_multiplier, leads + 5, 25)
+        buffer = int(
+            scan_buffer_multiplier
+            or getattr(self.settings, "scan_buffer_multiplier", 5)
+            or 5
+        )
+        scan_limit = max(leads * buffer, leads + 10, 40)
         if csv_path:
             mode_label = "CSV"
         elif use_mock:

@@ -49,7 +49,7 @@ async def hunt_and_outreach(
     send_mode: str,
     rotation_index: int,
     source_index: int = 0,
-    max_attempts: int = 3,
+    max_attempts: int = 8,
 ) -> tuple[CampaignResult | None, dict[str, Any]]:
     meta: dict[str, Any] = {"attempts": []}
     targets = all_hunt_targets()
@@ -59,6 +59,11 @@ async def hunt_and_outreach(
     meta["available_modes"] = modes
 
     scan = (settings.lead_scan_source or "auto").lower()
+    has_google = bool(settings.google_places_api_key)
+    logger.info(
+        f"[Hunter] scan_source={scan} google_places={'yes' if has_google else 'no'} "
+        f"→ {len(targets)} markets, {len(modes)} hunt modes, target={leads} leads/run"
+    )
     if scan == "google" and not settings.google_places_api_key:
         target, _ = pick_next_target(idx)
         meta["blocked"] = "google_places_api_key"
