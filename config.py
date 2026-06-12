@@ -388,8 +388,19 @@ class Settings(BaseSettings):
         default=True,
         description=(
             "When true, hybrid/smtp/auto cold sends use Instantly if configured. "
-            "SMTP stays for Telegram approve → send close/payment emails only."
+            "SMTP is fallback only when Instantly reply API cannot send."
         ),
+    )
+    close_send_via_instantly: bool = Field(
+        default=True,
+        description=(
+            "Telegram-approved close + payment emails reply via Instantly Unibox API "
+            "(same thread as cold outreach). SMTP fallback if reply context missing."
+        ),
+    )
+    close_send_smtp_fallback: bool = Field(
+        default=True,
+        description="When Instantly reply fails, fall back to Hostinger SMTP for approve & send.",
     )
 
     # ══════════════════════════════════════════

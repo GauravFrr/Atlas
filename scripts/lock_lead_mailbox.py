@@ -35,12 +35,13 @@ async def main() -> None:
         if not lead:
             print(f"No lead for {args.email}")
             return
-        domain = None
-        if args.domain:
-            from config import get_settings
-            from utils.domain_pool import DomainPool
+        from config import get_settings
+        from utils.domain_pool import DomainPool
 
-            domain = DomainPool(get_settings()).get_by_name(args.domain)
+        pool = DomainPool(get_settings())
+        domain = pool.get_by_name(args.domain) if args.domain else None
+        if not domain:
+            domain = pool.get_by_from_email(args.from_email)
         lock_mailbox_on_lead(
             lead,
             smtp_cfg={"from_email": args.from_email},

@@ -147,6 +147,14 @@ async def _process_reply_event(payload: dict[str, Any], event: str) -> None:
         async with factory() as session:
             lead = await _repo.get_by_email(session, email) if email else None
             if lead:
+                from utils.mailbox_lock import (
+                    extract_instantly_our_mailbox,
+                    lock_mailbox_from_instantly,
+                )
+
+                our_mailbox = extract_instantly_our_mailbox(payload)
+                if our_mailbox:
+                    lock_mailbox_from_instantly(lead, our_mailbox, settings)
                 await _repo.record_reply(
                     session,
                     lead,

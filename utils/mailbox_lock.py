@@ -1,7 +1,7 @@
 """
 Per-lead outbound mailbox lock — same From address for every email to that lead.
 
-Example: first cold email from gaurav@gauravxd.dev → all replies/follow-ups use that mailbox.
+Example: cold via Instantly from gaurav@gauravxd.dev → close reply + payment from that mailbox.
 """
 
 from __future__ import annotations
@@ -38,33 +38,107 @@ def get_locked_domain_name(lead: Any) -> str:
     return str(data.get(LOCK_DOMAIN) or "").strip()
 
 
+def extract_instantly_our_mailbox(payload: dict[str, Any]) -> str:
+    """
+    Which of *our* addresses the lead replied to (Instantly Unibox / webhook).
+    Ground truth for close + payment SMTP — not the demo-domain pool pick.
+    """
+    if not payload:
+        return ""
+
+    def _pick(val: Any) -> str:
+        if val and "@" in str(val):
+            return str(val).strip().lower()
+        return ""
+
+    for key in (
+        "to_address_email",
+        "to_email",
+        "account_email",
+        "sending_account_email",
+        "eaccount_email",
+        "from_email_account",
+    ):
+        found = _pick(payload.get(key))
+        if found:
+            return found
+
+    for nest_key in ("email", "message", "data"):
+        nest = payload.get(nest_key)
+        if isinstance(nest, dict):
+            for key in ("to_address_email", "to_email", "account_email"):
+                found = _pick(nest.get(key))
+                if found:
+                    return found
+
+    return ""
+
+
 def lock_mailbox_on_lead(
     lead: Any,
     *,
     smtp_cfg: dict[str, Any] | None = None,
     domain: OutreachDomain | None = None,
     send_channel: str = "",
+    from_email: str = "",
 ) -> None:
-    """Persist which mailbox sent to this lead (call after first successful outbound)."""
+    """Persist which mailbox owns this lead thread."""
     data = dict(getattr(lead, "enrichment_data", None) or {})
-    from_email = ""
-    if smtp_cfg:
-        from_email = str(smtp_cfg.get("from_email") or "").strip().lower()
-    if not from_email and domain:
-        from_email = (domain.smtp_from_email or domain.smtp_user or "").strip().lower()
+    resolved_from = (from_email or "").strip().lower()
+    if not resolved_from and smtp_cfg:
+        resolved_from = str(smtp_cfg.get("from_email") or "").strip().lower()
+    if not resolved_from and domain:
+        resolved_from = (domain.smtp_from_email or domain.smtp_user or "").strip().lower()
 
-    if from_email:
-        data[LOCK_MAILBOX] = from_email
+    # Instantly cold send: do not guess mailbox from demo-domain rotation.
+    if send_channel == "instantly" and not resolved_from:
+        if domain:
+            data[LOCK_DOMAIN] = domain.name
+        data["send_channel"] = "instantly"
+        lead.enrichment_data = data
+        logger.debug(
+            f"[Mailbox] Instantly lead {getattr(lead, 'business_name', '?')} "
+            f"— demo domain {domain.name if domain else '?'}; mailbox locks on reply"
+        )
+        return
+
+    if resolved_from:
+        data[LOCK_MAILBOX] = resolved_from
     if domain:
         data[LOCK_DOMAIN] = domain.name
     if send_channel:
         data["send_channel"] = send_channel
     lead.enrichment_data = data
-    if from_email:
+
+    if resolved_from:
         logger.info(
-            f"[Mailbox] Locked {getattr(lead, 'email', '?') or lead.id[:8]} "
-            f"→ {from_email}"
+            f"[Mailbox] Locked {getattr(lead, 'email', '?') or getattr(lead, 'id', '')[:8]} "
+            f"→ {resolved_from}"
         )
+
+
+def lock_mailbox_from_instantly(
+    lead: Any,
+    our_mailbox: str,
+    settings: Any,
+) -> None:
+    """Lock from Instantly reply/webhook — the address the lead actually replied to."""
+    email = (our_mailbox or "").strip().lower()
+    if not email or "@" not in email:
+        return
+    pool = DomainPool(settings)
+    domain = pool.get_by_from_email(email)
+    if not domain:
+        logger.warning(
+            f"[Mailbox] Reply to {email} not in outreach_domains.json — "
+            f"add that mailbox or run lock_lead_mailbox.py"
+        )
+    lock_mailbox_on_lead(
+        lead,
+        from_email=email,
+        domain=domain,
+        send_channel="instantly",
+    )
 
 
 def resolve_outreach_domain(
@@ -74,7 +148,7 @@ def resolve_outreach_domain(
     place_id: str = "",
 ) -> OutreachDomain | None:
     """
-    Domain for this lead: locked name/email first, else stable pick by place_id.
+    Domain for demo URL / Instantly campaign hint: locked name first, else stable pick.
     """
     if not pool.enabled:
         return None
@@ -94,9 +168,8 @@ def resolve_outreach_domain(
         if found:
             return found
         logger.warning(
-            f"[Mailbox] Locked mailbox {locked_email} not in pool — using .env SMTP"
+            f"[Mailbox] Locked mailbox {locked_email} not in pool — demo pick by place_id"
         )
-        return None
 
     pid = place_id or getattr(lead, "place_id", None) or getattr(lead, "id", "") or ""
     return pool.pick(pid) if pid else pool.pick("default")
@@ -111,10 +184,10 @@ def resolve_smtp_config(
     for_close_reply: bool = False,
 ) -> dict[str, Any] | None:
     """
-    SMTP config for this lead — always uses locked outbound_mailbox when set.
+    SMTP for Telegram-approved close / payment emails.
 
-    Cold outreach may use Instantly (send_channel=instantly). Telegram-approved
-  replies and payment emails still send via SMTP from the locked mailbox.
+    Always uses locked outbound_mailbox + matching Hostinger login from outreach_domains.json.
+    Never sends payment from urmikexd if the thread was gaurav@gauravxd.dev.
     """
     data = getattr(lead, "enrichment_data", None) or {}
     channel = str(data.get("send_channel") or "")
@@ -122,7 +195,18 @@ def resolve_smtp_config(
         return None
 
     locked_email = get_locked_mailbox(lead)
-    domain = outreach_domain or resolve_outreach_domain(lead, pool)
+    domain: OutreachDomain | None = None
+
+    if locked_email:
+        domain = pool.get_by_from_email(locked_email)
+        if not domain:
+            logger.error(
+                f"[Mailbox] Cannot send close email — locked {locked_email} "
+                f"not in {getattr(settings, 'outreach_domains_file', 'outreach_domains.json')}"
+            )
+            return None
+    else:
+        domain = outreach_domain or resolve_outreach_domain(lead, pool)
 
     if domain and domain.has_smtp():
         cfg = domain.get_smtp_config(

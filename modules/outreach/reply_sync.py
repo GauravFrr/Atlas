@@ -163,6 +163,14 @@ class InstantlyReplySync:
 
                 lead = await self.repo.get_by_email(session, lead_email) if lead_email else None
                 if lead:
+                    from utils.mailbox_lock import (
+                        extract_instantly_our_mailbox,
+                        lock_mailbox_from_instantly,
+                    )
+
+                    our_mailbox = extract_instantly_our_mailbox(item)
+                    if our_mailbox:
+                        lock_mailbox_from_instantly(lead, our_mailbox, self.settings)
                     await self.repo.record_reply(
                         session,
                         lead,

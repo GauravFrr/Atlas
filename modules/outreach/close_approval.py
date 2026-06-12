@@ -1,5 +1,5 @@
 """
-Close-email approval — draft → Telegram buttons → SMTP send on approve.
+Close-email approval — draft → Telegram buttons → Instantly reply (or SMTP fallback) on approve.
 """
 
 from __future__ import annotations
@@ -12,7 +12,6 @@ from loguru import logger
 
 from config import Settings
 from constants import LeadStatus
-from core.lead_maps import lead_to_maps_scan
 from database.connection import get_session_factory
 from database.models.lead import Lead
 from database.repositories.lead_repository import LeadRepository
@@ -138,36 +137,68 @@ class CloseApprovalService:
         if not email:
             return {"ok": False, "error": "lead_has_no_email"}
 
-        from core.campaign_orchestrator import CampaignOrchestrator
+        send_channel = ""
+        sent = False
 
-        maps = lead_to_maps_scan(lead)
-        orch = CampaignOrchestrator(self.settings)
-        domain = orch._domain_for_lead(lead, maps.place_id)
-        smtp_cfg = orch._smtp_for_close_reply(lead, domain)
-        if not smtp_cfg:
-            logger.warning("[CloseApproval] No SMTP for locked mailbox / domain pool")
-            return {"ok": False, "error": "smtp_not_configured"}
-
-        sent = orch.email_engine.send_email(
-            to_email=email,
-            subject=approval["subject"],
-            body=approval["body"],
-            smtp_config=smtp_cfg,
-            dry_run=False,
-        )
-        if sent:
-            from utils.mailbox_lock import lock_mailbox_on_lead
-
-            lock_mailbox_on_lead(
-                lead,
-                smtp_cfg=smtp_cfg,
-                domain=domain,
-                send_channel=str(
-                    (lead.enrichment_data or {}).get("send_channel") or "smtp"
-                ),
+        if self.settings.close_send_via_instantly and self.settings.has_instantly:
+            from modules.outreach.instantly_reply_send import (
+                send_approved_reply_via_instantly,
             )
+
+            instantly_result = await send_approved_reply_via_instantly(
+                self.settings,
+                lead,
+                subject=str(approval.get("subject") or ""),
+                body=str(approval.get("body") or ""),
+            )
+            if instantly_result.get("ok"):
+                sent = True
+                send_channel = "instantly"
+            elif not self.settings.close_send_smtp_fallback:
+                err = instantly_result.get("error") or "instantly_reply_failed"
+                logger.warning(f"[CloseApproval] Instantly reply failed: {err}")
+                return {"ok": False, "error": err, "instantly": instantly_result}
+            else:
+                logger.warning(
+                    f"[CloseApproval] Instantly reply failed ({instantly_result.get('error')}) "
+                    "— trying SMTP fallback"
+                )
+
         if not sent:
-            return {"ok": False, "error": "smtp_send_failed"}
+            from core.campaign_orchestrator import CampaignOrchestrator
+
+            orch = CampaignOrchestrator(self.settings)
+            smtp_cfg = orch._smtp_for_close_reply(lead, None)
+            domain = (
+                orch.domain_pool.get_by_from_email(str(smtp_cfg.get("from_email") or ""))
+                if smtp_cfg
+                else None
+            )
+            if not smtp_cfg:
+                logger.warning("[CloseApproval] No SMTP for locked mailbox / domain pool")
+                return {"ok": False, "error": "smtp_not_configured"}
+
+            sent = orch.email_engine.send_email(
+                to_email=email,
+                subject=approval["subject"],
+                body=approval["body"],
+                smtp_config=smtp_cfg,
+                dry_run=False,
+            )
+            if sent:
+                from utils.mailbox_lock import lock_mailbox_on_lead
+
+                lock_mailbox_on_lead(
+                    lead,
+                    smtp_cfg=smtp_cfg,
+                    domain=domain,
+                    send_channel=str(
+                        (lead.enrichment_data or {}).get("send_channel") or "smtp"
+                    ),
+                )
+                send_channel = "smtp"
+            if not sent:
+                return {"ok": False, "error": "smtp_send_failed"}
 
         from utils.mailbox_lock import merge_mailbox_lock_into
 
@@ -187,12 +218,15 @@ class CloseApprovalService:
                 await session.commit()
 
         unregister(approval_id)
-        logger.success(f"[CloseApproval] Sent reply email to {email}")
+        logger.success(
+            f"[CloseApproval] Sent reply email to {email} via {send_channel or 'unknown'}"
+        )
 
         return {
             "ok": True,
             "email": email,
             "lead_id": lead.id,
+            "send_channel": send_channel,
             "offer_payment_link": self.settings.has_razorpay,
         }
 

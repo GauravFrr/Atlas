@@ -511,6 +511,82 @@ class InstantlyClient:
             next_cursor = data.get("next_starting_after")
             return items, next_cursor
 
+    async def get_email(self, email_id: str) -> dict[str, Any] | None:
+        """Fetch one Unibox email by id (for reply context)."""
+        eid = (email_id or "").strip()
+        if not self.api_key or not eid:
+            return None
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            resp = await client.get(
+                f"{self.V2_BASE}/emails/{eid}",
+                headers=self._headers(),
+            )
+            if resp.status_code != 200:
+                logger.warning(
+                    f"[Instantly] get email {eid[:8]}... failed ({resp.status_code}): "
+                    f"{resp.text[:300]}"
+                )
+                return None
+            return resp.json() if resp.content else None
+
+    async def send_reply(
+        self,
+        *,
+        eaccount: str,
+        reply_to_uuid: str,
+        subject: str,
+        body_text: str,
+        body_html: str = "",
+    ) -> dict[str, Any]:
+        """
+        Reply in an existing Unibox thread (POST /api/v2/emails/reply).
+        Requires API scopes: emails:create or emails:all.
+        """
+        account = (eaccount or "").strip().lower()
+        reply_id = (reply_to_uuid or "").strip()
+        if not self.api_key:
+            return {"ok": False, "error": "missing_api_key"}
+        if not account or "@" not in account:
+            return {"ok": False, "error": "invalid_eaccount"}
+        if not reply_id:
+            return {"ok": False, "error": "missing_reply_to_uuid"}
+
+        body: dict[str, str] = {"text": (body_text or "").strip()}
+        if body_html.strip():
+            body["html"] = body_html.strip()
+
+        payload: dict[str, Any] = {
+            "eaccount": account,
+            "reply_to_uuid": reply_id,
+            "subject": (subject or "Re:").strip(),
+            "body": body,
+        }
+
+        async with httpx.AsyncClient(timeout=90.0) as client:
+            resp = await client.post(
+                f"{self.V2_BASE}/emails/reply",
+                headers=self._headers(),
+                json=payload,
+            )
+            if resp.status_code in (200, 201):
+                data = resp.json() if resp.content else {}
+                sent_id = str(data.get("id") or "")
+                logger.success(
+                    f"[Instantly] Reply queued from {account} "
+                    f"(in reply to {reply_id[:8]}...)"
+                )
+                return {"ok": True, "email_id": sent_id, "raw": data}
+
+            err = resp.text[:500]
+            logger.error(
+                f"[Instantly] reply failed ({resp.status_code}): {err}"
+            )
+            return {
+                "ok": False,
+                "error": f"HTTP {resp.status_code}",
+                "detail": err,
+            }
+
     @staticmethod
     def _lead_payload(
         email: str,
