@@ -198,16 +198,36 @@ class GoogleMapsScanner:
             while len(places) < limit and pages < 3:
                 # Page 2+ must use pagetoken ONLY (query + pagetoken = INVALID_REQUEST).
                 if next_token:
-                    await asyncio.sleep(2.0)
                     params = {"pagetoken": next_token, "key": api_key}
+                    data: dict[str, Any] = {}
+                    status = ""
+                    for delay in (2.0, 3.5, 5.0):
+                        await asyncio.sleep(delay)
+                        search_resp = await client.get(search_url, params=params)
+                        if search_resp.status_code != 200:
+                            logger.error(
+                                f"[M10] Places API HTTP {search_resp.status_code}: "
+                                f"{search_resp.text[:300]}"
+                            )
+                            break
+                        data = search_resp.json()
+                        status = str(data.get("status") or "")
+                        if status in ("OK", "ZERO_RESULTS"):
+                            break
+                        if status == "INVALID_REQUEST":
+                            logger.debug(
+                                f"[M10] pagetoken not ready ({delay}s), retrying…"
+                            )
+                            continue
+                        break
                 else:
                     params = {"query": query, "key": api_key}
-                search_resp = await client.get(search_url, params=params)
-                if search_resp.status_code != 200:
-                    logger.error(f"[M10] Places API HTTP {search_resp.status_code}: {search_resp.text[:300]}")
-                    break
-                data = search_resp.json()
-                status = str(data.get("status") or "")
+                    search_resp = await client.get(search_url, params=params)
+                    if search_resp.status_code != 200:
+                        logger.error(f"[M10] Places API HTTP {search_resp.status_code}: {search_resp.text[:300]}")
+                        break
+                    data = search_resp.json()
+                    status = str(data.get("status") or "")
                 if status not in ("OK", "ZERO_RESULTS"):
                     if places:
                         logger.warning(

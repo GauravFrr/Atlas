@@ -134,14 +134,24 @@ async def hunt_and_outreach(
                 settings=settings,
                 hunt_mode=hunt_mode,
             )
-            # M10 (no website) often returns 0 in US/UK — same market, outdated sites.
+            # Sparse modes (M04/M10/M26/M24–M29) often return 0 — M02 outdated same market.
+            _M02_FALLBACK_MODES = frozenset({
+                "m10_no_website",
+                "m04_low_reviews",
+                "m26_new_business",
+                "m24_chatbot",
+                "m27_no_booking",
+                "m28_no_ordering",
+                "m29_no_support",
+                "m25_social_only",
+            })
             if (
-                hunt_mode == "m10_no_website"
+                hunt_mode in _M02_FALLBACK_MODES
                 and result.leads_processed == 0
                 and result.emails_sent == 0
             ):
                 logger.info(
-                    f"[Hunter] M10 empty for {niche} @ {city} — retry with M02 outdated"
+                    f"[Hunter] {hunt_mode} empty for {niche} @ {city} — retry M02 outdated"
                 )
                 result = await run_campaign(
                     niche=niche,
