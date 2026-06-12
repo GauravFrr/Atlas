@@ -530,6 +530,22 @@ class LeadRepository:
         )
         return list(result.scalars().all())
 
+    async def list_recent_outreach(
+        self, session: AsyncSession, limit: int = 8
+    ) -> list[Lead]:
+        """Leads with email first — for Telegram /leads (not app-store junk)."""
+        result = await session.execute(
+            select(Lead)
+            .where(
+                Lead.is_deleted.is_(False),
+                Lead.email.is_not(None),
+                Lead.email != "",
+            )
+            .order_by(Lead.updated_at.desc())
+            .limit(limit)
+        )
+        return list(result.scalars().all())
+
     async def get_by_id(
         self, session: AsyncSession, lead_id: str
     ) -> Optional[Lead]:

@@ -169,6 +169,13 @@ class Settings(BaseSettings):
         default=25,
         description="Skip re-resuming same incomplete lead within N minutes (Atlas 30m loop)",
     )
+    autopilot_hunt_modes: str = Field(
+        default="",
+        description=(
+            "Comma-separated hunt modes for Atlas (e.g. m10_no_website,m02_outdated). "
+            "Empty + production = email-friendly modes only (skips M07 apps, M08 Etsy, etc.)"
+        ),
+    )
     min_lead_score: int = Field(default=6)
     email_cooldown_days: int = Field(default=3)
     max_revisions_per_order: int = Field(default=2)

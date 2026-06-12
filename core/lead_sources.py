@@ -1,6 +1,6 @@
 """
 All Category A lead-hunting methods (01–17) from docs/AGENT_EARNING_METHODS.md.
-Autopilot rotates through every mode each cycle.
+Autopilot rotates through enabled modes each cycle.
 """
 
 from __future__ import annotations
@@ -26,6 +26,17 @@ HUNT_MODES: list[tuple[str, str]] = [
     ("m15_shopify", "M15 Shopify store audit"),
     ("m16_podcast", "M16 Podcast guest outreach"),
     ("m17_apollo", "M17 Apollo cold email"),
+]
+
+# Production default — local businesses / sites where email enrichment works
+PRODUCTION_HUNT_MODES: list[str] = [
+    "m10_no_website",
+    "m02_outdated",
+    "m04_low_reviews",
+    "m01_broken_link",
+    "m17_apollo",
+    "m06_youtube",
+    "m15_shopify",
 ]
 
 # Aliases for older state files
@@ -59,9 +70,26 @@ def all_hunt_mode_ids() -> list[str]:
     return [mid for mid, _ in HUNT_MODES]
 
 
+def _parse_mode_list(raw: str) -> list[str]:
+    out: list[str] = []
+    for part in (raw or "").split(","):
+        mode = normalize_mode(part.strip())
+        if mode and mode in all_hunt_mode_ids() and mode not in out:
+            out.append(mode)
+    return out
+
+
 def available_hunt_modes(settings: Settings) -> list[str]:
-    """All 17 doc methods — always rotate (some may return 0 leads without API keys)."""
-    _ = settings
+    """
+    Modes Atlas rotates through.
+    Production default skips M07 (App Store apps) and other low-email hunters.
+    Override with AUTOPILOT_HUNT_MODES=m10_no_website,m02_outdated,...
+    """
+    explicit = _parse_mode_list(getattr(settings, "autopilot_hunt_modes", "") or "")
+    if explicit:
+        return explicit
+    if getattr(settings, "is_production", False):
+        return list(PRODUCTION_HUNT_MODES)
     return all_hunt_mode_ids()
 
 

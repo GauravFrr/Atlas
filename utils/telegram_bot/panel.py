@@ -93,25 +93,45 @@ async def fetch_health(settings: Settings) -> str:
 
 
 async def fetch_leads_list(settings: Settings, limit: int = 8) -> tuple[str, list[tuple[str, str, str]]]:
+    from core.lead_sources import available_hunt_modes, hunt_mode_label
+
     repo = LeadRepository()
     factory = get_session_factory()
     rows: list[tuple[str, str, str]] = []
     async with factory() as session:
-        leads = await repo.list_recent(session, limit=limit)
+        leads = await repo.list_recent_outreach(session, limit=limit)
+        inv = await repo.count_inventory_summary(session)
 
-    lines = [header_block(settings, "Recent leads"), ""]
+    lines = [header_block(settings, "Outreach leads (has email)"), ""]
     if not leads:
-        lines.append("<i>No leads in database.</i>")
+        modes = available_hunt_modes(settings)
+        mode_hint = hunt_mode_label(modes[0]) if modes else "m10"
+        lines.extend(
+            [
+                "<i>No leads with email yet.</i>",
+                "",
+                f"Inventory: {inv.get('with_email', 0)} sellable · "
+                f"{inv.get('no_email', 0)} no-email saved",
+                "",
+                "Atlas was hunting <b>app store apps</b> (M07) — those rarely have emails.",
+                f"Production now uses: <code>{esc(', '.join(modes[:4]))}…</code>",
+                "",
+                "<i>/export for inventory · /status for full breakdown</i>",
+            ]
+        )
         return "\n".join(lines), rows
 
     for lead in leads:
         short = lead_short_id(lead.id)
-        email = (lead.email or "no email")[:28]
+        email = (lead.email or "")[:28]
+        data = lead.enrichment_data or {}
+        hunt = str(data.get("hunt_mode") or lead.source or "")[:12]
         label = f"{lead.business_name[:22]} · {lead.status}"
         rows.append((short, label, lead.status))
         lines.append(
             f"• <b>{esc(lead.business_name)}</b>\n"
             f"  <code>{esc(email)}</code> · {esc(lead.status)}"
+            + (f" · <i>{esc(hunt)}</i>" if hunt else "")
         )
     lines.append("\n<i>Tap a lead below for actions.</i>")
     return "\n".join(lines), rows
