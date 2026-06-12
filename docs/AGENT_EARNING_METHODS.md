@@ -292,6 +292,43 @@ DECISION: Brain picks niche → finds leads → generates icebreakers → sends 
 
 ---
 
+## Hunt modes M24–M26 — Website & Automation focus (core offers)
+
+> These feed the same Maps → demo → Instantly pipeline. They exist because
+> "website or automation" is the agent's main product line.
+
+### M24 — No Chat/Booking Detector (`m24_chatbot`)
+
+```
+TARGET:   US/UK/AU local businesses with a decent site but ZERO automation
+DETECT:   Fetch site HTML → no Calendly/Intercom/Tawk/WhatsApp/booking widget found
+PITCH:    "Your site looks good but visitors can't book or chat — you're losing after-hours leads"
+EARN:     $300–800 setup + optional monthly retainer (maps to Method 24 delivery)
+DECISION: Modern site + no tools → AUTOMATION pitch (never a new website)
+```
+
+### M25 — Social-Page-Only Business (`m25_social_only`)
+
+```
+TARGET:   Businesses whose only web presence is Facebook/Instagram/Linktree
+DETECT:   Maps "website" field is a social/platform URL
+PITCH:    "Customers searching for you find only a Facebook page — here's a real site demo"
+EARN:     $300–1,200 per website (maps to Method 25 delivery)
+DECISION: Social URL detected → treated as NO WEBSITE → demo + website pitch
+```
+
+### M26 — New Business Scanner (`m26_new_business`)
+
+```
+TARGET:   Brand-new businesses (≤3 Google reviews) — no established web presence
+DETECT:   Maps review_count ≤ 3
+PITCH:    "You just opened — lock in your web presence before competitors outrank you"
+EARN:     $300–1,200 website + review/booking setup upsell
+DECISION: New business signal → WEBSITE pitch first, automation upsell after
+```
+
+---
+
 # 🟡 CATEGORY B — CONTENT & PASSIVE INCOME METHODS
 > Agent creates content that earns money while you sleep
 

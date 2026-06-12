@@ -124,6 +124,27 @@ async def fetch_leads(
 
             return await PodcastOutreacher(settings, llm).scan_maps(niche, limit=limit), "m16"
 
+        if mode == "m24_chatbot":
+            from modules.lead_finder.scanners.website_automation import NoAutomationScanner
+
+            return await NoAutomationScanner(settings, llm).scan_maps(
+                niche, city, limit, scan_local_fn
+            ), "m24"
+
+        if mode == "m25_social_only":
+            from modules.lead_finder.scanners.website_automation import SocialOnlyScanner
+
+            return await SocialOnlyScanner(settings, llm).scan_maps(
+                niche, city, limit, scan_local_fn
+            ), "m25"
+
+        if mode == "m26_new_business":
+            from modules.lead_finder.scanners.website_automation import NewBusinessScanner
+
+            return await NewBusinessScanner(settings, llm).scan_maps(
+                niche, city, limit, scan_local_fn
+            ), "m26"
+
         logger.warning(f"[LeadFetcher] unknown mode {mode}, fallback m10")
         leads, src = await scan_local_fn(niche, city, limit, no_website_only=True)
         return leads, src

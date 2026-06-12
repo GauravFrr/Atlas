@@ -26,17 +26,24 @@ HUNT_MODES: list[tuple[str, str]] = [
     ("m15_shopify", "M15 Shopify store audit"),
     ("m16_podcast", "M16 Podcast guest outreach"),
     ("m17_apollo", "M17 Apollo cold email"),
+    ("m24_chatbot", "M24 Site without chat/booking (automation)"),
+    ("m25_social_only", "M25 Social-page-only business (website)"),
+    ("m26_new_business", "M26 New business, no presence (website)"),
 ]
 
-# Production default — local businesses / sites where email enrichment works
+# Production default — local businesses / sites where email enrichment works.
+# Ordered website-first, automation second (core offers), volume modes interleaved.
 PRODUCTION_HUNT_MODES: list[str] = [
-    "m02_outdated",
-    "m10_no_website",
-    "m04_low_reviews",
-    "m01_broken_link",
-    "m17_apollo",
-    "m15_shopify",
-    "m06_youtube",
+    "m02_outdated",       # website rebuild
+    "m24_chatbot",        # automation: site has no chat/booking
+    "m25_social_only",    # website: only a FB/Insta page
+    "m10_no_website",     # website: no site at all
+    "m04_low_reviews",    # reputation + website
+    "m26_new_business",   # website: brand-new business
+    "m01_broken_link",    # website fix → rebuild
+    "m17_apollo",         # B2B cold email
+    "m15_shopify",        # store audit
+    "m06_youtube",        # channel audit
 ]
 
 # Aliases for older state files
@@ -58,6 +65,9 @@ MODE_ALIASES: dict[str, str] = {
     "saas_churn": "m14_saas_churn",
     "shopify": "m15_shopify",
     "podcast": "m16_podcast",
+    "chatbot": "m24_chatbot",
+    "social_only": "m25_social_only",
+    "new_business": "m26_new_business",
 }
 
 

@@ -118,7 +118,7 @@ def service_offer_for_lead(lead: MapsScanResult) -> ServiceOffer:
     if mode in ("m11_linkedin_jobs", "m05_job_board", "m24_chatbot"):
         return ServiceOffer.AUTOMATION
 
-    if mode == "m10_no_website":
+    if mode in ("m10_no_website", "m25_social_only", "m26_new_business"):
         return ServiceOffer.WEBSITE
 
     if mode == "m02_outdated":
