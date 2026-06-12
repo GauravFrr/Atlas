@@ -378,10 +378,17 @@ class Settings(BaseSettings):
         ),
     )
     email_send_mode: str = Field(
-        default="draft",
+        default="instantly",
         description=(
-            "draft | smtp | instantly | auto | hybrid "
-            "(hybrid = random Instantly/SMTP per lead + fallback if one fails)"
+            "draft | smtp | instantly | auto | hybrid — "
+            "use instantly for cold (recommended); smtp only for Telegram-approved close replies"
+        ),
+    )
+    cold_send_instantly_only: bool = Field(
+        default=True,
+        description=(
+            "When true, hybrid/smtp/auto cold sends use Instantly if configured. "
+            "SMTP stays for Telegram approve → send close/payment emails only."
         ),
     )
 

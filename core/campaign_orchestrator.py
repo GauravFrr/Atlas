@@ -709,13 +709,19 @@ class CampaignOrchestrator:
         self,
         *,
         max_leads: int = 10,
-        send_mode: SendMode = "hybrid",
+        send_mode: SendMode | None = None,
     ) -> dict[str, Any]:
         """
         Finish leads saved in SQLite when a previous run stopped mid-pipeline.
         Runs before new hunting in autopilot.
         """
         from core.lead_resume import assess_lead
+        from utils.send_router import resolve_send_mode
+
+        if send_mode is None:
+            send_mode = resolve_send_mode(
+                self.settings, self.settings.email_send_mode or "instantly"
+            )
 
         stats: dict[str, Any] = {
             "queued": 0,

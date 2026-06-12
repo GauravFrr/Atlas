@@ -179,12 +179,14 @@ async def run_resume_queue(
     settings: Any,
     *,
     max_leads: int = 10,
-    send_mode: str = "hybrid",
+    send_mode: str | None = None,
 ) -> dict[str, Any]:
     """Entry point for autopilot and scripts — finish incomplete DB leads first."""
     from core.campaign_orchestrator import CampaignOrchestrator
     from utils.send_router import resolve_send_mode
 
-    mode = resolve_send_mode(settings, send_mode)
+    mode = resolve_send_mode(
+        settings, send_mode or settings.email_send_mode or "instantly"
+    )
     orch = CampaignOrchestrator(settings)
     return await orch.process_incomplete_queue(max_leads=max_leads, send_mode=mode)

@@ -248,8 +248,15 @@ async def fetch_stack(settings: Settings) -> str:
     lines = [header_block(settings, "Configured stack"), ""]
     for name, ok in flags:
         lines.append(f"{'✅' if ok else '○'} {esc(name)}")
-    mode = getattr(settings, "email_send_mode", "auto") or "auto"
-    lines.append(f"\n📤 Send mode: <code>{esc(mode)}</code>")
+    from utils.send_router import describe_mode, resolve_send_mode
+
+    raw = getattr(settings, "email_send_mode", "instantly") or "instantly"
+    resolved = resolve_send_mode(settings, raw)
+    lines.append(f"\n📤 Cold send: <code>{esc(resolved)}</code>")
+    lines.append(f"<i>{esc(describe_mode(resolved))}</i>")
+    lines.append(
+        "<i>Replies: Instantly webhook + /replies · SMTP only for approved close emails</i>"
+    )
     return "\n".join(lines)
 
 

@@ -45,6 +45,12 @@ def resolve_send_mode(settings: Any, requested: str | None = None) -> SendMode:
     if mode not in VALID_MODES:
         mode = "draft"
 
+    # Cold outreach: Instantly only when configured (Hostinger SMTP → spam; no reply sync).
+    if mode in ("hybrid", "smtp", "auto") and can_use_instantly(settings):
+        only_instantly = getattr(settings, "cold_send_instantly_only", True)
+        if only_instantly or getattr(settings, "is_production", False):
+            mode = "instantly"
+
     if mode == "auto":
         if can_use_instantly(settings):
             return "instantly"
@@ -53,8 +59,10 @@ def resolve_send_mode(settings: Any, requested: str | None = None) -> SendMode:
         return "draft"
 
     if mode == "hybrid":
-        if can_use_instantly(settings) or can_use_smtp(settings):
-            return "hybrid"
+        if can_use_instantly(settings):
+            return "instantly"
+        if can_use_smtp(settings):
+            return "smtp"
         return "draft"
 
     if mode == "instantly" and not can_use_instantly(settings):
