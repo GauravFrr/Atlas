@@ -109,6 +109,15 @@ async def startup_sequence(args: argparse.Namespace) -> None:
     if disabled:
         logger.warning(f"Disabled features (no API keys): {', '.join(disabled)}")
 
+    from core.lead_sources import available_hunt_modes
+
+    hunt_raw = (settings.autopilot_hunt_modes or "").strip()
+    hunt_modes = available_hunt_modes(settings)
+    if hunt_raw:
+        logger.info(f"Hunt config: AUTOPILOT_HUNT_MODES={hunt_raw!r} → {len(hunt_modes)} active mode(s)")
+    else:
+        logger.info(f"Hunt config: default production rotation → {len(hunt_modes)} mode(s)")
+
     # Step 2: Initialize logging files
     logger.info("Step 2/5: Logging initialized...")
     import os

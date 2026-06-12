@@ -5,6 +5,8 @@ Autopilot rotates through enabled modes each cycle.
 
 from __future__ import annotations
 
+from loguru import logger
+
 from config import Settings
 
 # hunt_mode_id → dashboard label (matches doc methods)
@@ -107,8 +109,17 @@ def available_hunt_modes(settings: Settings) -> list[str]:
     Production default skips M07 (App Store apps) and other low-email hunters.
     Override with AUTOPILOT_HUNT_MODES=m10_no_website,m02_outdated,...
     """
-    explicit = _parse_mode_list(getattr(settings, "autopilot_hunt_modes", "") or "")
+    raw = (getattr(settings, "autopilot_hunt_modes", "") or "").strip()
+    explicit = _parse_mode_list(raw)
     if explicit:
+        # Hidden Railway env sometimes pins m10 only — ~0 leads in US/UK.
+        if getattr(settings, "is_production", False) and set(explicit) <= {"m10_no_website"}:
+            logger.warning(
+                f"[Hunter] AUTOPILOT_HUNT_MODES={raw!r} → only no-website hunts; "
+                f"using all {len(PRODUCTION_HUNT_MODES)} production modes instead"
+            )
+            return list(PRODUCTION_HUNT_MODES)
+        logger.info(f"[Hunter] AUTOPILOT_HUNT_MODES={raw!r} → {len(explicit)} mode(s)")
         return explicit
     if getattr(settings, "is_production", False):
         return list(PRODUCTION_HUNT_MODES)
