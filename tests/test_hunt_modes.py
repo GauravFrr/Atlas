@@ -9,6 +9,13 @@ def test_empty_uses_production_modes() -> None:
     assert available_hunt_modes(s) == PRODUCTION_HUNT_MODES
 
 
+def test_empty_string_does_not_parse_as_m10() -> None:
+    from core.lead_sources import _parse_mode_list
+
+    assert _parse_mode_list("") == []
+    assert _parse_mode_list("  ,  , ") == []
+
+
 def test_m10_only_expands_in_production() -> None:
     s = Settings(agent_env="production", autopilot_hunt_modes="m10_no_website")
     assert available_hunt_modes(s) == PRODUCTION_HUNT_MODES

@@ -39,13 +39,12 @@ HUNT_MODES: list[tuple[str, str]] = [
 # Production default — local businesses / sites where email enrichment works.
 # Ordered website-first, automation second (core offers), volume modes interleaved.
 PRODUCTION_HUNT_MODES: list[str] = [
-    "m02_outdated",       # website rebuild
+    "m02_outdated",       # website rebuild (high yield US/UK)
     "m24_chatbot",        # AI chatbot + niche automation gaps
     "m27_no_booking",     # appointment booking missing
     "m28_no_ordering",    # online ordering missing
     "m29_no_support",     # AI customer support / help desk missing
     "m25_social_only",    # website: only FB/Insta page
-    "m10_no_website",     # website: no site at all
     "m04_low_reviews",    # reputation + website
     "m26_new_business",   # website: brand-new business
     "m03_reddit",         # Reddit: need dev / chatbot / SaaS
@@ -54,6 +53,7 @@ PRODUCTION_HUNT_MODES: list[str] = [
     "m17_apollo",         # B2B cold email
     "m15_shopify",        # store audit
     "m06_youtube",        # channel audit
+    "m10_no_website",     # last: sparse in developed markets
 ]
 
 # Aliases for older state files
@@ -97,8 +97,11 @@ def all_hunt_mode_ids() -> list[str]:
 def _parse_mode_list(raw: str) -> list[str]:
     out: list[str] = []
     for part in (raw or "").split(","):
-        mode = normalize_mode(part.strip())
-        if mode and mode in all_hunt_mode_ids() and mode not in out:
+        token = part.strip()
+        if not token:
+            continue  # empty AUTOPILOT_HUNT_MODES must not become m10 via normalize_mode("")
+        mode = normalize_mode(token)
+        if mode in all_hunt_mode_ids() and mode not in out:
             out.append(mode)
     return out
 
