@@ -110,14 +110,33 @@ def _followup_offer(lead: MapsScanResult, company: str, plan: PitchPlan) -> str:
 
         )
 
-    return (
+    from modules.outreach.website_pitch import _primary_automation
 
-        f"Just following up — {company}'s site looks fine, but enquiries still look manual.\n\n"
-
-        f"I add AI chat, lead capture, or online booking so nothing sits unanswered.\n\n"
-
-        "Happy to share a quick demo if useful."
-
+    primary = _primary_automation(lead)
+    followups = {
+        "customer_support": (
+            f"Just following up — {company}'s site looks fine, but support still looks manual.\n\n"
+            f"I add AI customer support so common questions get answered right away.\n\n"
+            "Happy to share a quick demo if useful."
+        ),
+        "booking": (
+            f"Just following up — {company}'s site looks fine, but booking still goes through the phone.\n\n"
+            f"I wire online scheduling so customers pick a time without calling.\n\n"
+            "Happy to share a quick demo if useful."
+        ),
+        "ordering": (
+            f"Just following up — {company}'s site looks fine, but there's no way to order online.\n\n"
+            f"I add online ordering so customers don't bounce to a competitor.\n\n"
+            "Happy to share a quick demo if useful."
+        ),
+    }
+    return followups.get(
+        primary,
+        (
+            f"Just following up — {company}'s site looks fine, but enquiries still look manual.\n\n"
+            f"I add AI chat, lead capture, or online booking so nothing sits unanswered.\n\n"
+            "Happy to share a quick demo if useful."
+        ),
     )
 
 
@@ -131,7 +150,16 @@ def _close_body(lead: MapsScanResult, first: str, company: str, plan: PitchPlan)
     elif plan.service == ServiceOffer.WEBSITE:
         radar = f"a new site for {company}" if plan.tier.value == "no_site" else f"a site refresh for {company}"
     else:
-        radar = f"chat or booking automation for {company}"
+        from modules.outreach.website_pitch import _primary_automation
+
+        primary = _primary_automation(lead)
+        radar_bits = {
+            "customer_support": f"AI customer support for {company}",
+            "booking": f"online booking for {company}",
+            "ordering": f"online ordering for {company}",
+            "scheduling": f"scheduling automation for {company}",
+        }
+        radar = radar_bits.get(primary, f"chat or booking automation for {company}")
 
     return (
 

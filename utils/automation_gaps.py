@@ -189,9 +189,7 @@ AUTOMATION_PITCH_LABELS: dict[str, str] = {
     "crm_followup": "automated lead follow-up so no enquiry goes cold",
     "intake_forms": "smart intake forms that qualify leads before you talk to them",
     "custom_saas": "custom software / SaaS tool built for your workflow",
-    "customer_support": (
-        "AI customer support — answers FAQs, handles tickets, escalates to you 24/7"
-    ),
+    "customer_support": "AI customer support on your site (answers FAQs, escalates when needed)",
 }
 
 # Priority when multiple gaps exist (pitch the highest-value one first)

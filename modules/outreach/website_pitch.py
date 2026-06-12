@@ -228,17 +228,18 @@ def _primary_automation(lead: MapsScanResult) -> str:
     return str((getattr(lead, "raw", None) or {}).get("automation_primary") or "ai_chat")
 
 
+# Mikey-style offers — same voice as website pitch: "I set up X so Y", no credential brag.
 _AUTOMATION_OFFERS: dict[str, str] = {
     "ai_chat": (
-        "I'm an AI engineer — I build custom chatbots for business websites that answer "
-        "questions, capture leads, and hand off to you 24/7 (not a generic widget)."
+        "I set up an AI chat widget on your existing site so visitors get instant answers "
+        "and qualified leads — 24/7, even when you're on a job."
     ),
     "booking": (
-        "I build online appointment booking into your site — customers pick a slot, "
-        "get reminders, and you stop playing phone tag."
+        "I wire online booking into your site so customers pick a time, get reminders, "
+        "and you stop playing phone tag."
     ),
     "ordering": (
-        "I add online ordering to your site so customers can place pickup/delivery orders "
+        "I add online ordering to your site so customers can place pickup or delivery orders "
         "without calling — tied to your menu and hours."
     ),
     "scheduling": (
@@ -246,24 +247,24 @@ _AUTOMATION_OFFERS: dict[str, str] = {
         "isn't stuck on the phone all day."
     ),
     "whatsapp": (
-        "I wire a WhatsApp AI assistant so enquiries on mobile get instant replies "
-        "and qualified leads even when you're on a job."
+        "I connect a WhatsApp assistant to your business so mobile enquiries get instant "
+        "replies and qualified leads even when you're on a job."
     ),
     "intake_forms": (
-        "I build smart intake forms that qualify leads before they reach you — "
+        "I add smart intake on your site so you qualify leads before a call — "
         "fewer tire-kickers, more serious enquiries."
     ),
     "crm_followup": (
-        "I automate lead follow-up so every enquiry gets a reply and nurture sequence — "
-        "nothing goes cold in the inbox."
+        "I set up automated follow-up on your site so every enquiry gets a reply — "
+        "nothing sits in the inbox until someone remembers."
     ),
     "custom_saas": (
-        "I'm a full-stack developer — I build custom tools and SaaS dashboards when "
-        "off-the-shelf software doesn't fit your workflow."
+        "I build small custom tools when off-the-shelf software doesn't fit — "
+        "dashboards, workflows, or a simple app for how you actually work."
     ),
     "customer_support": (
-        "I build AI customer support for your site — it answers FAQs, handles common "
-        "requests, and escalates to you when a human is needed (24/7, no extra hires)."
+        "I set up AI customer support on your existing site so common questions get "
+        "answered right away — hours, pricing, bookings — and anything tricky still reaches you."
     ),
 }
 
@@ -413,8 +414,9 @@ def fallback_icebreaker_for_plan(lead: MapsScanResult, plan: PitchPlan) -> str:
             f"that a small custom tool could fix."
         ),
         "customer_support": (
-            f"Saw {biz} at {site} — no help desk or AI support, so customer questions "
-            f"wait for email replies or phone callbacks."
+            f"Saw {biz} already has a solid site at {site}. "
+            f"But there's no help desk or AI support — so customer questions wait for "
+            f"email replies or phone callbacks."
         ),
     }
     return gap_lines.get(

@@ -6,3 +6,6 @@ Saw oldtownplumber.com — looks dated and isn't really mobile-friendly for a pl
 
 # AUTOMATION — professional site
 Saw Capitol Plumbing already has a solid site at capitolplumbing.com. But there's no AI chat, online booking, or automated follow-up when someone reaches out.
+
+# AUTOMATION — customer support
+Saw Riverside Dental already has a solid site at riversidedental.com. But there's no help desk or AI support — so patient questions wait for email replies or phone callbacks.
