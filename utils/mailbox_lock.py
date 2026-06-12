@@ -96,7 +96,9 @@ def lock_mailbox_on_lead(
     resolved_from = (from_email or "").strip().lower()
     if not resolved_from and smtp_cfg:
         resolved_from = str(smtp_cfg.get("from_email") or "").strip().lower()
-    if not resolved_from and domain:
+    # Domain-pool fallback is SMTP-only: on Instantly the pool pick is just the
+    # demo URL domain, NOT the sending account (that's an Instantly workspace mailbox).
+    if not resolved_from and domain and send_channel != "instantly":
         resolved_from = (domain.smtp_from_email or domain.smtp_user or "").strip().lower()
 
     # Instantly cold send: do not guess mailbox from demo-domain rotation.

@@ -38,6 +38,35 @@ def test_re_subject_prefixes_re() -> None:
     assert _re_subject("Re: Already") == "Re: Already"
 
 
+def test_instantly_cold_send_does_not_lock_pool_mailbox() -> None:
+    from utils.mailbox_lock import lock_mailbox_on_lead
+
+    class FakeDomain:
+        name = "gauravxd-dev"
+        smtp_from_email = "gauravdev@gauravxd.dev"
+        smtp_user = "gauravdev@gauravxd.dev"
+
+    lead = _lead()
+    lock_mailbox_on_lead(lead, domain=FakeDomain(), send_channel="instantly")
+    data = lead.enrichment_data
+    assert "outbound_mailbox" not in data
+    assert data["outbound_domain_name"] == "gauravxd-dev"
+    assert data["send_channel"] == "instantly"
+
+
+def test_smtp_send_still_locks_pool_mailbox() -> None:
+    from utils.mailbox_lock import lock_mailbox_on_lead
+
+    class FakeDomain:
+        name = "gauravxd-dev"
+        smtp_from_email = "gauravdev@gauravxd.dev"
+        smtp_user = "gauravdev@gauravxd.dev"
+
+    lead = _lead()
+    lock_mailbox_on_lead(lead, domain=FakeDomain(), send_channel="smtp")
+    assert lead.enrichment_data["outbound_mailbox"] == "gauravdev@gauravxd.dev"
+
+
 @pytest.mark.asyncio
 async def test_resolve_context_fetches_sent_when_no_received() -> None:
     lead = _lead(outbound_mailbox="gaurav@gauravxd.dev")
