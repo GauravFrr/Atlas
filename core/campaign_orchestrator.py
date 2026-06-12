@@ -332,66 +332,69 @@ class CampaignOrchestrator:
             new_leads = await self._filter_new_leads(
                 session, raw_leads, leads, campaign_run.id, outcome
             )
-
+            campaign_run_id = campaign_run.id
             emails_sent_today = await self.lead_repo.count_emails_sent_today(session)
-            daily_cap = self.settings.max_emails_per_day
-            instantly_csv_rows: list[dict[str, str]] = []
 
-            for maps_lead in new_leads:
-                try:
-                    async with session.begin_nested():
-                        lead_result = await self._process_one_lead(
-                            session=session,
-                            maps_lead=maps_lead,
-                            campaign_run_id=campaign_run.id,
-                            send_mode=send_mode,
-                            emails_sent_today=emails_sent_today,
-                            daily_cap=daily_cap,
-                            instantly_csv_rows=instantly_csv_rows,
-                        )
-                except Exception as e:
-                    logger.error(
-                        f"Lead failed ({maps_lead.business_name}): {e} — continuing"
+        daily_cap = self.settings.max_emails_per_day
+        instantly_csv_rows: list[dict[str, str]] = []
+
+        for maps_lead in new_leads:
+            try:
+                async with get_session() as session:
+                    lead_result = await self._process_one_lead(
+                        session=session,
+                        maps_lead=maps_lead,
+                        campaign_run_id=campaign_run_id,
+                        send_mode=send_mode,
+                        emails_sent_today=emails_sent_today,
+                        daily_cap=daily_cap,
+                        instantly_csv_rows=instantly_csv_rows,
                     )
-                    lead_result = CampaignLeadResult(
-                        business_name=maps_lead.business_name,
-                        place_id=maps_lead.place_id,
-                        status="error",
-                        error=str(e),
-                    )
+            except Exception as e:
+                logger.error(
+                    f"Lead failed ({maps_lead.business_name}): {e} — continuing"
+                )
+                lead_result = CampaignLeadResult(
+                    business_name=maps_lead.business_name,
+                    place_id=maps_lead.place_id,
+                    status="error",
+                    error=str(e),
+                )
 
-                outcome.lead_results.append(lead_result)
+            outcome.lead_results.append(lead_result)
 
-                if lead_result.status == "processed":
-                    outcome.leads_processed += 1
-                    if lead_result.demo_path:
-                        outcome.demos_generated += 1
-                    if lead_result.draft_path:
-                        outcome.emails_drafted += 1
-                    if lead_result.sent:
-                        outcome.emails_sent += 1
-                        emails_sent_today += 1
-                elif lead_result.status == "skipped_duplicate":
-                    outcome.duplicates_skipped += 1
-                elif lead_result.status == "discarded_no_email":
-                    outcome.no_email_count += 1
-                elif lead_result.status == "error":
-                    outcome.errors_count += 1
+            if lead_result.status == "processed":
+                outcome.leads_processed += 1
+                if lead_result.demo_path:
+                    outcome.demos_generated += 1
+                if lead_result.draft_path:
+                    outcome.emails_drafted += 1
+                if lead_result.sent:
+                    outcome.emails_sent += 1
+                    emails_sent_today += 1
+            elif lead_result.status == "skipped_duplicate":
+                outcome.duplicates_skipped += 1
+            elif lead_result.status in ("discarded_no_email", "saved_no_email"):
+                outcome.no_email_count += 1
+            elif lead_result.status == "error":
+                outcome.errors_count += 1
 
-            campaign_run.leads_processed = outcome.leads_processed
-            campaign_run.demos_generated = outcome.demos_generated
-            campaign_run.emails_drafted = outcome.emails_drafted
-            campaign_run.emails_sent = outcome.emails_sent
-            campaign_run.duplicates_skipped = outcome.duplicates_skipped
-            campaign_run.no_email_count = outcome.no_email_count
-            campaign_run.errors_count = outcome.errors_count
+        if instantly_csv_rows:
+            csv_path = Path("outputs/instantly") / f"leads_{campaign_run_id[:8]}.csv"
+            export_instantly_csv(instantly_csv_rows, csv_path)
 
-            if instantly_csv_rows:
-                csv_path = Path("outputs/instantly") / f"leads_{campaign_run.id[:8]}.csv"
-                export_instantly_csv(instantly_csv_rows, csv_path)
-
-            summary = outcome.summary_text()
-            await self.campaign_repo.complete(session, campaign_run, summary)
+        async with get_session() as session:
+            campaign_run = await self.campaign_repo.get_by_id(session, campaign_run_id)
+            if campaign_run:
+                campaign_run.leads_processed = outcome.leads_processed
+                campaign_run.demos_generated = outcome.demos_generated
+                campaign_run.emails_drafted = outcome.emails_drafted
+                campaign_run.emails_sent = outcome.emails_sent
+                campaign_run.duplicates_skipped = outcome.duplicates_skipped
+                campaign_run.no_email_count = outcome.no_email_count
+                campaign_run.errors_count = outcome.errors_count
+                summary = outcome.summary_text()
+                await self.campaign_repo.complete(session, campaign_run, summary)
 
         outcome.completed_at = datetime.now(timezone.utc).isoformat()
         logger.success(f"\n{outcome.summary_text()}")
@@ -722,10 +725,10 @@ class CampaignOrchestrator:
             "steps_done": {},
         }
 
+        cooldown = int(getattr(self.settings, "resume_cooldown_minutes", 25) or 25)
+        from core.lead_resume import is_resume_deferred, mark_resume_deferred
+
         async with get_session() as session:
-            cooldown = int(
-                getattr(self.settings, "resume_cooldown_minutes", 25) or 25
-            )
             incomplete = await self.lead_repo.list_incomplete(
                 session, max_leads, resume_cooldown_minutes=cooldown
             )
@@ -736,12 +739,15 @@ class CampaignOrchestrator:
             stats["queued"] = len(incomplete)
             logger.info(f"[Resume] {len(incomplete)} lead(s) need finishing work")
 
+            resume_jobs: list[tuple[str, list[str], str]] = []
             for lead in incomplete:
                 plan = assess_lead(lead)
                 logger.info(
                     f"[Resume] {lead.business_name}: missing={plan.missing} "
                     f"(status={lead.status})"
                 )
+                if plan.missing:
+                    resume_jobs.append((lead.id, plan.missing, lead.business_name))
 
             campaign_run = await self.campaign_repo.create(
                 session,
@@ -750,42 +756,43 @@ class CampaignOrchestrator:
                 len(incomplete),
                 send_mode == "draft",
             )
-
-            if (
-                send_mode in ("instantly", "hybrid")
-                and send_mode != "draft"
-                and self.instantly.is_configured
-                and getattr(self.settings, "instantly_auto_prepare", True)
-            ):
-                await self.instantly.client.ensure_send_ready(force=False)
-
+            campaign_run_id = campaign_run.id
             emails_sent_today = await self.lead_repo.count_emails_sent_today(session)
-            daily_cap = self.settings.max_emails_per_day
-            instantly_csv_rows: list[dict[str, str]] = []
 
-            from core.lead_resume import is_resume_deferred, mark_resume_deferred
+        if (
+            send_mode in ("instantly", "hybrid")
+            and send_mode != "draft"
+            and self.instantly.is_configured
+            and getattr(self.settings, "instantly_auto_prepare", True)
+        ):
+            await self.instantly.client.ensure_send_ready(force=False)
 
-            for db_lead in incomplete:
+        daily_cap = self.settings.max_emails_per_day
+        instantly_csv_rows: list[dict[str, str]] = []
+
+        # One DB session per lead — LLM/FTP can take 60s+; savepoints + Postgres break.
+        for lead_id, missing, business_name in resume_jobs:
+            async with get_session() as session:
+                db_lead = await self.lead_repo.get_by_id(session, lead_id)
+                if not db_lead:
+                    continue
                 if is_resume_deferred(db_lead, cooldown):
-                    logger.debug(
-                        f"[Resume] Deferred {db_lead.business_name} (cooldown)"
-                    )
+                    logger.debug(f"[Resume] Deferred {business_name} (cooldown)")
                     continue
                 plan = assess_lead(db_lead)
                 if not plan.missing:
                     continue
                 try:
-                    async with session.begin_nested():
-                        sent = await self._resume_one_lead(
-                            session=session,
-                            db_lead=db_lead,
-                            missing=plan.missing,
-                            campaign_run_id=campaign_run.id,
-                            send_mode=send_mode,
-                            emails_sent_today=emails_sent_today,
-                            daily_cap=daily_cap,
-                            instantly_csv_rows=instantly_csv_rows,
-                        )
+                    sent = await self._resume_one_lead(
+                        session=session,
+                        db_lead=db_lead,
+                        missing=plan.missing,
+                        campaign_run_id=campaign_run_id,
+                        send_mode=send_mode,
+                        emails_sent_today=emails_sent_today,
+                        daily_cap=daily_cap,
+                        instantly_csv_rows=instantly_csv_rows,
+                    )
                     stats["resumed"] += 1
                     for step in plan.missing:
                         stats["steps_done"][step] = stats["steps_done"].get(step, 0) + 1
@@ -797,13 +804,11 @@ class CampaignOrchestrator:
                 except Exception as e:
                     stats["errors"] += 1
                     mark_resume_deferred(db_lead, cooldown)
-                    logger.error(f"[Resume] Failed {db_lead.business_name}: {e}")
+                    logger.error(f"[Resume] Failed {business_name}: {e}")
 
-            if instantly_csv_rows:
-                csv_out = Path("outputs/instantly") / f"resume_{campaign_run.id[:8]}.csv"
-                export_instantly_csv(instantly_csv_rows, csv_out)
-
-            await session.commit()
+        if instantly_csv_rows:
+            csv_out = Path("outputs/instantly") / f"resume_{campaign_run_id[:8]}.csv"
+            export_instantly_csv(instantly_csv_rows, csv_out)
 
         logger.success(
             f"[Resume] Done: {stats['resumed']}/{stats['queued']} resumed, "

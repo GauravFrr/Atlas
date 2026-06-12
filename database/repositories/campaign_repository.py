@@ -30,6 +30,14 @@ class CampaignRepository:
         await session.flush()
         return run
 
+    async def get_by_id(
+        self, session: AsyncSession, run_id: str
+    ) -> CampaignRun | None:
+        result = await session.execute(
+            select(CampaignRun).where(CampaignRun.id == run_id).limit(1)
+        )
+        return result.scalar_one_or_none()
+
     async def complete(
         self,
         session: AsyncSession,
