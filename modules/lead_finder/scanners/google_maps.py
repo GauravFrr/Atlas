@@ -182,10 +182,12 @@ class GoogleMapsScanner:
             next_token: str | None = None
             pages = 0
             while len(places) < limit and pages < 3:
-                params: dict[str, str] = {"query": query, "key": api_key}
+                # Page 2+ must use pagetoken ONLY (query + pagetoken = INVALID_REQUEST).
                 if next_token:
-                    params["pagetoken"] = next_token
                     await asyncio.sleep(2.0)
+                    params = {"pagetoken": next_token, "key": api_key}
+                else:
+                    params = {"query": query, "key": api_key}
                 search_resp = await client.get(search_url, params=params)
                 if search_resp.status_code != 200:
                     logger.error(f"[M10] Places API HTTP {search_resp.status_code}: {search_resp.text[:300]}")
@@ -193,10 +195,16 @@ class GoogleMapsScanner:
                 data = search_resp.json()
                 status = str(data.get("status") or "")
                 if status not in ("OK", "ZERO_RESULTS"):
-                    logger.error(
-                        f"[M10] Places text search failed status={status} "
-                        f"error={data.get('error_message', '')} query={query!r}"
-                    )
+                    if places:
+                        logger.warning(
+                            f"[M10] Places pagination stopped ({status}) — "
+                            f"using {len(places)} result(s) from first page"
+                        )
+                    else:
+                        logger.error(
+                            f"[M10] Places text search failed status={status} "
+                            f"error={data.get('error_message', '')} query={query!r}"
+                        )
                     break
                 batch = data.get("results") or []
                 for row in batch:
@@ -258,6 +266,11 @@ class GoogleMapsScanner:
                 )
                 leads.append(lead)
 
+        if no_website_only and places and not leads:
+            logger.warning(
+                f"[M10] {len(places)} places found but 0 without website for '{query}'. "
+                "Use hunt mode m02_outdated (most US/UK businesses have a site)."
+            )
         logger.info(
             f"[M10] Found {len(leads)} leads for '{query}' "
             f"(no_website_only={no_website_only}, scanned={len(places)} places)"

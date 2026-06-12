@@ -98,6 +98,12 @@ async def hunt_and_outreach(
         f"[Hunter] scan_source={scan} google_places={'yes' if has_google else 'no'} "
         f"→ {len(targets)} markets, {len(modes)} hunt modes, target={leads} leads/run"
     )
+    if len(modes) == 1:
+        logger.warning(
+            f"[Hunter] Only 1 hunt mode active ({modes[0]}). "
+            "Remove AUTOPILOT_HUNT_MODES on Railway to use all 7 production modes, "
+            "or set: m02_outdated,m10_no_website,m04_low_reviews,m01_broken_link,m17_apollo,m15_shopify"
+        )
     if scan == "google" and not settings.google_places_api_key:
         target, _ = pick_next_target(idx)
         meta["blocked"] = "google_places_api_key"
@@ -126,6 +132,25 @@ async def hunt_and_outreach(
                 settings=settings,
                 hunt_mode=hunt_mode,
             )
+            # M10 (no website) often returns 0 in US/UK — same market, outdated sites.
+            if (
+                hunt_mode == "m10_no_website"
+                and result.leads_processed == 0
+                and result.emails_sent == 0
+            ):
+                logger.info(
+                    f"[Hunter] M10 empty for {niche} @ {city} — retry with M02 outdated"
+                )
+                result = await run_campaign(
+                    niche=niche,
+                    city=city,
+                    leads=leads,
+                    send_mode=send_mode,
+                    settings=settings,
+                    hunt_mode="m02_outdated",
+                )
+                meta["hunt_mode"] = "m02_outdated"
+                meta["hunt_mode_label"] = hunt_mode_label("m02_outdated")
         except Exception as e:
             logger.error(f"[Hunter] Campaign failed {niche}@{city}: {e}")
             meta["attempts"].append(

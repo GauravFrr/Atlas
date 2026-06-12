@@ -18,7 +18,11 @@ from modules.lead_finder.scanners.google_maps import MapsScanResult
 
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 PHOTON_URL = "https://photon.komoot.io/api/"
-OVERPASS_URL = "https://overpass-api.de/api/interpreter"
+OVERPASS_URLS = (
+    "https://overpass-api.de/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
+    "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+)
 
 
 def _user_agent(settings: Any = None) -> str:
@@ -265,22 +269,29 @@ class OSMMapsScanner:
             out center {min(limit * 3, 120)};
             """
 
-            try:
-                resp = await client.post(
-                    OVERPASS_URL,
-                    data={"data": query},
-                    headers=headers,
-                )
-            except Exception as e:
-                logger.error(f"[OSM] Overpass request failed: {e}")
+            elements: list[dict[str, Any]] = []
+            last_err = ""
+            for overpass_url in OVERPASS_URLS:
+                try:
+                    resp = await client.post(
+                        overpass_url,
+                        data={"data": query},
+                        headers=headers,
+                        timeout=90.0,
+                    )
+                    if resp.status_code == 200:
+                        elements = resp.json().get("elements", [])
+                        if elements or overpass_url == OVERPASS_URLS[-1]:
+                            break
+                    else:
+                        last_err = f"HTTP {resp.status_code}"
+                        logger.warning(f"[OSM] Overpass {overpass_url} → {last_err}")
+                except Exception as e:
+                    last_err = str(e)
+                    logger.warning(f"[OSM] Overpass {overpass_url} failed: {e}")
+            if not elements and last_err:
+                logger.error(f"[OSM] All Overpass mirrors failed: {last_err}")
                 return []
-
-            if resp.status_code != 200:
-                logger.error(f"[OSM] Overpass HTTP {resp.status_code}: {resp.text[:300]}")
-                return []
-
-            data = resp.json()
-            elements = data.get("elements", [])
 
         leads: list[MapsScanResult] = []
         seen: set[str] = set()
